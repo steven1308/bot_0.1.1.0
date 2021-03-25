@@ -3,8 +3,9 @@
     "Prefix":"(",
     "channel":"817761407071944765",
     "pingchannel":"652343442826985502",
-    "ping":"p",
+    "ping":"pi",
     "join":"j",
-    "shutdown":"sd"
+    "shutdown":"sd",
+    "play":"p"
 
 }

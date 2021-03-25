@@ -1,9 +1,12 @@
 const Discord = require("discord.js");
 const ytdl = require('ytdl-core');
+const ytpl = require("ytpl");
 const config = require(`${__dirname}/config.json`);
+const delight = require("./delight.js");
 const client = new Discord.Client();
 let connection;
-let queue = [];
+let dispatcher;
+let list = [];
 client.login(config.Token);
 client.on("ready", () => {
     client.channels.cache.get(config.channel).send("bot is online");
@@ -12,7 +15,7 @@ client.on("ready", () => {
 client.on("voiceStateUpdate", (oldState, newState) => {
 
     if (newState.member.user.bot && newState.channel === null) {
-        queue = [];
+        list = [];
         connection = undefined;
     }
 
@@ -54,26 +57,26 @@ client.on("message", async (msg) => {
 
     if (msg.author.bot) return;
 
-
-
+    /**
+     * 趣味
+     */
+    delight(msg, client);
+    
     if (!msg.content.startsWith(config.Prefix)) return;
     let command = msg.content.split(" ")[0].replace(config.Prefix, "").toLowerCase(); // ?ping www -> ["?ping", "www"]
     let args = msg.content.split(" ").slice(1);
 
-
-
     if (command === config.ping) {
         command = 'ping';
     } else if (msg.member.voice.channelID === null) {
-
         command = 'notjoin';
     } else if (command === config.join) {
         command = 'join';
-
     } else if (command === config.shutdown) {
         command = 'shutdown';
+    } else if (command === config.play) {
+        command = 'play';
     }
-
 
     switch (command) {
         case 'ping':
@@ -107,32 +110,38 @@ client.on("message", async (msg) => {
 
             break;
         case 'play':
-            const res = await ytdl.getInfo(args[0]);
-            const info = res.videoDetails;
 
-            queue.push({
-                name: info.title,
-                url: args[0]
-            });
+           await churl(msg, args[0],true);
 
             if (connection === undefined) {
                 connection = await msg.member.voice.channel.join();
             }
 
-            if (isplay) {
-                msg.channel.send(`歌曲加入隊列：${info.title}`);
-            } else {
-                playMusic(msg, args[0]);
+            if (!isplay) {
+                playMusic(msg, list[0].url);
                 isplay = true;
             }
 
             break;
+        case 'pn':
+
+            churl(msg, args[0],false);
+
+            break;
+            case "skip":
+            if(list.length>0){
+                msg.channel.send(`已跳過 `);
+                dispatcher.end();
+            }else{
+                
+                msg.channel.send(`播放序列是空的!`);
+            }    
+            
+                break;
         default:
             client.channels.cache.get(msg.channel.id).send("err");
             break;
     }
-
-
 });
 
 function time() {
@@ -140,25 +149,16 @@ function time() {
     return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
 }
 
-let v = 0.02;
-
 function playMusic(msg, url) {
 
-    let dispatcher = connection.play(ytdl(url, { filter: 'audioonly' }));
-
+    dispatcher = connection.play(ytdl(url, { filter: 'audioonly' }));
+    dispatcher.setVolume(0.06);
     
-    dispatcher.setVolume(v += 0.01);
-    
-
-    queue.shift();
-
     dispatcher.on('finish', () => {
-
-        console.log(queue);
-
-        if (queue.length > 0) {
-            playMusic(msg, queue.shift().url);
-            
+        list.shift();
+        if (list.length > 0) {
+            playMusic(msg, list[0].url);
+           
         } else {
             isplay = false;
             msg.channel.send('目前沒有音樂了，請加入音樂 :D');
@@ -168,48 +168,75 @@ function playMusic(msg, url) {
     return dispatcher;
 }
 
-// function join(msg) {
-//     msg.member.voice.channel.join();
-// }
+function getTime(seconds) {
+    let h = Math.floor(seconds / 3600).toString().padStart(2, "0");
+    let m = Math.floor((seconds / 60 % 60)).toString().padStart(2, "0");
+    let s = Math.floor((seconds % 60)).toString().padStart(2, "0");
+    if (h >= 0) {
+        return m + ":" + s;
+    } else {
+        return h + ":" + m + ":" + s;
+    }
+}
 
+async function churl(msg, args, ck) {
 
-// if (this.isPlaying) {
-//     msg.channel.send(`歌曲加入隊列：${info.title}`);
-// } else {
-//     this.isPlaying = true;
-//     this.playMusic(msg, guildID, this.queue[guildID][0]);
-// }
+    let i = 0;
 
+    if (ytpl.validateID(args)) {
+        
+        const playlist = await ytpl(args, { limit: "Infinity" });
 
+        for (i = 0; i < playlist.items.length; i++) {
+            if (ck) {
+                list.push({
+                    name: playlist.items[i].title,
+                    url: playlist.items[i].url,
+                    time: playlist.items[i].duration,
+                    status: "normal"
+                })
+                msg.channel.send(`已從播放清單 ${playlist.title} 新增` + " `" + i + "` " + "首歌");
+            } else {
+                    list.unshift({
+                        name: playlist.items[i].title,
+                        url: playlist.items[i].url,
+                        time: playlist.items[i].duration,
+                        status: "jump"
+                    })
 
+            }
+                msg.channel.send(`已插播播放清單 ${playlist.title} ` + " `" + i + "` " + "首歌");
+        }
 
+        } else if (ytdl.validateURL(args)) {
 
-// playMusic(msg, guildID, musicInfo) {
+            const res = await ytdl.getInfo(args);
+            const info = res.videoDetails;
 
-//     // 提示播放音樂
-//     msg.channel.send(`播放音樂：${musicInfo.name}`);
+        if(ck){
 
-//     // 播放音樂
-//     this.dispatcher[guildID] = this.connection[guildID].play(ytdl(musicInfo.url, { filter: 'audioonly' }));
+            list.push({
+                name: info.title,
+                url: args,
+                time: getTime(info.lengthSeconds),
+                status: "normal"
+            });
 
-//     // 把音量降 50%，不然第一次容易被機器人的音量嚇到 QQ
-//     this.dispatcher[guildID].setVolume(0.5);
+            msg.channel.send(`歌曲加入隊列：${info.title}`);
+        }else{
+            
+            list.unshift({
+                name: info.title,
+                url: args,
+                time: getTime(info.lengthSeconds),
+                status: "jump"
+            });
 
-//     // 移除 queue 中目前播放的歌曲
-//     this.queue[guildID].shift();
-
-//     // 歌曲播放結束時的事件
-//     const self = this;
-//     this.dispatcher[guildID].on('finish', () => {
-
-//         // 如果隊列中有歌曲
-//         if (self.queue[guildID].length > 0) {
-//             self.playMusic(msg, guildID, self.queue[guildID].shift());
-//         } else {
-//             self.isPlaying = false;
-//             msg.channel.send('目前沒有音樂了，請加入音樂 :D');
-//         }
-
-//     });
-
-// }
+            msg.channel.send(`歌曲差入隊列：${info.title}`);
+            console.log(list);
+        }
+        } else {
+            msg.channel.send(`查無此歌曲或歌單`);
+            return;
+        }
+}

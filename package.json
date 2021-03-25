@@ -14,6 +14,7 @@
     "discord.js": "^12.5.1",
     "ffmpeg-static": "^4.2.8",
     "nodemon": "^2.0.7",
-    "ytdl-core": "^4.5.0"
+    "ytdl-core": "^4.5.0",
+    "ytpl": "^2.0.5"
   }
 }
