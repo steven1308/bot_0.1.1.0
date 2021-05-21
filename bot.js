@@ -6,7 +6,8 @@ const delight = require("./delight.js");
 const ping = require("./src/ping.js");
 const Record = require("./src/Record.js");
 const utils = require("./src/utils.js")
-
+let shuffleck = false;
+let shufflelist = [];
 const client = new Discord.Client();
 let connection;
 let dispatcher;
@@ -52,22 +53,20 @@ client.on("message", async (msg) => {
             break;
         case 'notjoin':
             msg.channel.send('請先加入頻道');
-
             break;
         case 'list':
             queue(msg, args[0]);
-
-
             break;
-
         case 'play':
-
             await churl(msg, args[0], true);
-
             break;
         case 'pn':
-
             churl(msg, args[0], false);
+            break;
+        case 'shuffle':
+
+
+            shuffle();
 
             break;
         case "skip":
@@ -82,79 +81,77 @@ client.on("message", async (msg) => {
             break;
         default:
             client.channels.cache.get(msg.channel.id).send("err");
+
             break;
     }
 });
 function queue(msg, cord1) {
-
-
     if (list.length === 0) {
-
         client.channels.cache.get(msg.channel.id).send('歌單是空的');
         return;
     }
 
+    if (shuffleck === true) {
+        listch = shufflelist;
+    } else {
+        listch = list;
+    }
+
     let queue = [];
-let d;
-if(list.length>config.listmax){
+    let i = 0, b;
+    let a = listch.length / 10;
+    let atime = 0;
+    if (listch.length > config.listmax) {
+        d = config.listmax;
+    } else {
+        d = listch.length
+    }
+    if (cord1 === undefined) {
+        i = 0;
+        cord1 = 0;
+        b = `${i / 10 + 1}/${Math.round(a) + 1}頁`;
+    } else {
+        if (cord1 <= Math.round(a) + 1) {
+            i = cord1-1 * 10;
 
-d=config.listmax;
-
-}else{
-    d=list.length
-}
-    for (let i = 0; i <d ; i++) {
-
-
-      
-        if (list[i].type === "play") {
-            queue[i] = "`[" + `${(i + 1).toString().padStart(2, "0")}` + "] ` ▶ " + `${list[i].name}` + "`" + ` ${list[i].time}` + "`" + `由 ${list[i].user} 加入`
-
-        } else {
-
-
-            queue[i] = "`[" + `${(i + 1).toString().padStart(2, "0")}` + "]`" + `${list[i].name}` + "`" + ` ${list[i].time}` + "`" + `由 ${list[i].user} 加入`
+            b = `${cord1}/${Math.round(a) + 1}頁`;
+            cord1 = cord1  * 10;
         }
+    }
 
+    for (k = 0; i < cord1 + config.listmax; i++, k++) {
+        if (listch[i] !== undefined) {
+            if (listch[i].type === "play") {
+                queue[k] = "`[" + `${(i + 1).toString().padStart(2, "0")}` + "] ` ▶ " + `${listch[i].name}` + "`" + ` ${listch[i].time}` + "`" + `由 ${listch[i].user} 加入`
 
+            } else {
 
+                queue[k] = "`[" + `${(i + 1).toString().padStart(2, "0")}` + "]`" + `${listch[i].name}` + "`" + ` ${listch[i].time}` + "`" + `由 ${listch[i].user} 加入`
+            }
+        }
+    }
 
+    queue.unshift(b);
 
+    for (let i = 0; i < listch.length; i++) {
 
-
+        atime += utils.mintosec(listch[i].time);
 
     }
-    let a = list.length / 10;
-    let b = `1/${Math.round(a) + 1}頁`;
-    let atime=0;
-    queue.unshift(b);
-    
-for(let i=0;i<list.length;i++){
+    atime = utils.getTime(atime);
 
-atime += utils.mintosec(list[i].time);
-
-}
-atime=utils.getTime(atime);
-    
-queue.push(`序列中目前有 ${list.length} 個 曲目 ，長度是 [${atime}]`)
-
+    queue.push(`序列中目前有 ${listch.length} 個 曲目 ，長度是 [${atime}]`)
 
     client.channels.cache.get(msg.channel.id).send(queue);
 
-
-
-
-
-
 }
-
 
 function playMusic(msg, url) {
 
     dispatcher = connection.play(ytdl(url, { filter: 'audioonly' }));
     list[0].type = "play";
     dispatcher.setVolume(0.06);
-    
+
     dispatcher.on('finish', () => {
         list.shift();
         if (list.length > 0) {
@@ -165,16 +162,13 @@ function playMusic(msg, url) {
             msg.channel.send('目前沒有音樂了，請加入音樂 :D');
         }
     });
-    
+
 
     return dispatcher;
 }
 
 
 async function churl(msg, args, ck) {
-
-
-
     let i = 0;
 
     if (ytpl.validateID(args)) {
@@ -189,7 +183,8 @@ async function churl(msg, args, ck) {
                     time: playlist.items[i].duration,
                     status: "normal",
                     user: msg.author.username,
-                    type: "wait"
+                    type: "wait",
+                    id: playlist.id
                 })
 
             } else {
@@ -199,12 +194,13 @@ async function churl(msg, args, ck) {
                     time: playlist.items[i].duration,
                     status: "jump",
                     type: "wait",
-                    user: msg.author.username
+                    user: msg.author.username,
+                    id: playlist.id
                 })
 
             }
         }
-       
+
         msg.channel.send(`已從播放清單 ${playlist.title} 新增` + " `" + i + "` " + "首歌");
 
     } else if (ytdl.validateURL(args)) {
@@ -220,7 +216,8 @@ async function churl(msg, args, ck) {
                 time: utils.getTime(info.lengthSeconds),
                 status: "normal",
                 type: "wait",
-                user: msg.author.username
+                user: msg.author.username,
+                id: playlist.id
             });
 
             msg.channel.send(`歌曲加入隊列：${info.title}`);
@@ -232,7 +229,8 @@ async function churl(msg, args, ck) {
                 time: utils.getTime(info.lengthSeconds),
                 status: "jump",
                 type: "wait",
-                user: msg.author.username
+                user: msg.author.username,
+                id: playlist.id
             });
 
             msg.channel.send(`歌曲差入隊列：${info.title}`);
@@ -249,4 +247,32 @@ async function churl(msg, args, ck) {
         playMusic(msg, list[0].url);
         isplay = true;
     }
+    if (shuffleck === true) {
+        shuffleck = false;
+        shufflec();
+    }
+}
+
+function shuffle() {
+    if (shuffleck === false) {
+        let list1 = list;
+        for (i = 0; i < list.length; i++) {
+            let w = Math.floor(Math.random() * list1.length - i);
+            shufflelist[i] = list1[w];
+            list1.splice(w, 1);
+
+        }
+        shuffleck = true;
+    } else {
+        shufflelist = [];
+        shuffleck = false;
+    }
+
+
+
+
+
+
+
+
 }

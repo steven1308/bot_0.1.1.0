@@ -43,8 +43,9 @@ function command(msg,command,config) {
         command = 'shutdown';
     } else if (command === config.play) {
         command = 'play';
+    }else if (command === config.shuffle) {
+        command = 'shuffle';
     }
-
 return command;
 }
 

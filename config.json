@@ -1,12 +1,12 @@
 {
-    "Token": "NDY4NjMyMzk1NjEyOTQ2NDMz.W01t7Q.Q__g18yCCo4B0ZCqsvOsbYz1y_k",
-    "Prefix":"(",
-    "channel":"817761407071944765",
-    "pingchannel":"652343442826985502",
-    "ping":"pi",
-    "join":"j",
-    "shutdown":"sd",
-    "play":"p",
-    "listmax":10
-
+    "Token": "NDY4NjMyMzk1NjEyOTQ2NDMz.W01t7Q.-J9oqdoxX6HStlTZmZ70WjwcAiM",
+    "Prefix": "(",
+    "channel": "817761407071944765",
+    "pingchannel": "652343442826985502",
+    "ping": "pi",
+    "join": "j",
+    "shutdown": "sd",
+    "play": "p",
+    "shuffle": "sh",
+    "listmax": 10
 }
