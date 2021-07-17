@@ -33,7 +33,7 @@ client.on("message", async (msg) => {
     if (msg.author.bot) return;
 
     /**
-     * 趣味
+     * 趣味 :)
      */
     delight(msg, client);
 
@@ -71,7 +71,7 @@ client.on("message", async (msg) => {
             break;
         case "skip":
             if (list.length > 0) {
-                msg.channel.send(`已跳過 `);
+                msg.channel.send(`已跳過${list[0].name} `);
                 dispatcher.end();
             } else {
 
@@ -106,20 +106,22 @@ function queue(msg, cord1) {
     } else {
         d = listch.length
     }
-    if (cord1 === undefined) {
+    console.log(cord1);
+    if (cord1 === undefined||cord1==='1') {
         i = 0;
         cord1 = 0;
         b = `${i / 10 + 1}/${Math.round(a) + 1}頁`;
     } else {
+
         if (cord1 <= Math.round(a) + 1) {
-            i = cord1-1 * 10;
+            i = (cord1 - 1) * 10;
 
             b = `${cord1}/${Math.round(a) + 1}頁`;
-            cord1 = cord1  * 10;
+            cord1 =i;
         }
     }
-
-    for (k = 0; i < cord1 + config.listmax; i++, k++) {
+    console.log(cord1);
+    for (k = 0; i <  cord1+ config.listmax; i++, k++) {
         if (listch[i] !== undefined) {
             if (listch[i].type === "play") {
                 queue[k] = "`[" + `${(i + 1).toString().padStart(2, "0")}` + "] ` ▶ " + `${listch[i].name}` + "`" + ` ${listch[i].time}` + "`" + `由 ${listch[i].user} 加入`
@@ -143,7 +145,7 @@ function queue(msg, cord1) {
     queue.push(`序列中目前有 ${listch.length} 個 曲目 ，長度是 [${atime}]`)
 
     client.channels.cache.get(msg.channel.id).send(queue);
-
+// console.log(queue); 
 }
 
 function playMusic(msg, url) {
@@ -268,7 +270,7 @@ function shuffle() {
         shuffleck = false;
     }
 
-
+    msg.channel.send(`清單以隨機撥放`);
 
 
 
