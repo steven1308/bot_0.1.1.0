@@ -1,4 +1,5 @@
 const Discord = require("discord.js");
+const { validateID } = require("ytdl-core");
 const ytdl = require('ytdl-core');
 const ytpl = require("ytpl");
 const config = require(`${__dirname}/config.json`);
@@ -8,6 +9,7 @@ const Record = require("./src/Record.js");
 const utils = require("./src/utils.js")
 let shuffleck = false;
 let shufflelist = [];
+let playlist=[];
 const client = new Discord.Client();
 let connection;
 let dispatcher;
@@ -53,6 +55,7 @@ client.on("message", async (msg) => {
         case 'shutdown':
             list=[];
             shufflelist=[];
+            shuffleck = false;
             msg.member.voice.channel.leave();
             break;
         case 'notjoin':
@@ -86,79 +89,78 @@ client.on("message", async (msg) => {
     }
 });
 function queue(msg, cord1) {
+
     if (list.length === 0) {
         client.channels.cache.get(msg.channel.id).send('歌單是空的');
         return;
     }
 
-    if (shuffleck) {
-        listch = shufflelist;
-        console.log("sh");
-    } else {
-        listch = list;
-    }
 
     let queue = [];
     let i = 0, b;
-    let a = listch.length / 10;
+    let a = playlist.length / 10;
     let atime = 0;
-    if (listch.length > config.listmax) {
+    if (playlist.length > config.listmax) {
         d = config.listmax;
     } else {
-        d = listch.length
+        d = playlist.length
     }
-    console.log(cord1);
+    // console.log(cord1);
     if (cord1 === undefined || cord1 === '1') {
         i = 0;
         cord1 = 0;
-        b = `${i / 10 + 1}/${Math.round(a) }頁`;
+        b = `${i / 10 + 1}/${Math.round(a) +1}頁\n`;
     } else {
 
         if (cord1 <= Math.round(a) + 1) {
             i = (cord1 - 1) * 10;
 
-            b = `${cord1}/${Math.round(a) }頁`;
+            b = `${cord1}/${Math.round(a) }頁\n`;
             cord1 = i;
         }
     }
     // console.log(cord1);
     for (k = 0; i < cord1 + config.listmax; i++, k++) {
-        if (listch[i] !== undefined) {
-            if (listch[i].type === "play") {
-                queue[k] = "`[" + `${(i + 1).toString().padStart(2, "0")}` + "] ` ▶ " + `${listch[i].name}` + "`" + ` ${listch[i].time}` + "`" + `由 ${listch[i].user} 加入`
-
+        if (playlist[i] !== undefined) {
+            if (playlist[i].type === "play") {
+                // queue[k] = "`[" + `${(i + 1).toString().padStart(2, "0")}`+ "]`  ▶ " + `${playlist[i].name}` + "`" + `${playlist[i].time}` + "`" + ` 由 `+"**"+`${playlist[i].user}`+"**" +`加入`
+                console.log("test");
+                queue.splice(1,0,"`[" + `${(1).toString().padStart(2, "0")}`+ "]`  ▶ " + `${playlist[i].name}` + "`" + `${playlist[i].time}` + "`" + ` 由 `+"**"+`${playlist[i].user}`+"**" +`加入`)
             } else {
 
-                queue[k] = "`[" + `${(i + 1).toString().padStart(2, "0")}` + "]`" + `${listch[i].name}` + "`" + ` ${listch[i].time}` + "`" + `由 ${listch[i].user} 加入`
+                queue[k] = "`[" + `${(i + 1).toString().padStart(2, "0")}`+ "]`" + `${playlist[i].name}` + "`" + `${playlist[i].time}` + "`" + ` 由 `+"**"+`${playlist[i].user} `+"**"+`加入`
             }
         }
     }
 
     queue.unshift(b);
 
-    for (let i = 0; i < listch.length; i++) {
+    for (let i = 0; i < playlist.length; i++) {
 
-        atime += utils.mintosec(listch[i].time);
+        atime += utils.mintosec(playlist[i].time);
 
     }
     atime = utils.getTime(atime);
 
-    queue.push(`序列中目前有 ${listch.length} 個 曲目 ，長度是 [${atime}]`)
+    queue.push(`\n序列中目前有 ${playlist.length} 個 曲目 ，長度是 [${atime}]`)
 
     client.channels.cache.get(msg.channel.id).send(queue);
     // console.log(queue); 
 }
 
-function playMusic(msg, url) {
+function playMusic(msg, url, id) {
 
     dispatcher = connection.play(ytdl(url, { filter: 'audioonly' }));
     list[0].type = "play";
     dispatcher.setVolume(0.06);
 
     dispatcher.on('finish', () => {
-        list.shift();
-        if (list.length > 0) {
-            playMusic(msg, list[0].url);
+
+        // list = list.filter(() => )
+
+        if (playlist.length > 0) {
+            
+            playMusic(msg, playlist[0].url);
 
         } else {
             isplay = false;
@@ -173,41 +175,45 @@ function playMusic(msg, url) {
 
 async function churl(msg, args, ck) {
     let i = 0;
-    console.log(args);
+    // console.log(args);
+    
+   
     if (ytpl.validateID(args)) {
-
-        const playlist = await ytpl(args, { limit: "Infinity" });
-
-        for (i = 0; i < playlist.items.length; i++) {
+        
+        const loadlist = await ytpl(args, { limit: "Infinity" });
+        
+        for (i = 0; i < loadlist.items.length; i++) {
             if (ck) {
+                
                 list.push({
-                    name: playlist.items[i].title,
-                    url: playlist.items[i].url,
-                    time: playlist.items[i].duration,
+                    name: loadlist.items[i].title,
+                    url: loadlist.items[i].url,
+                    time: loadlist.items[i].duration,
                     status: "normal",
                     user: msg.author.username,
                     type: "wait",
-                    id: playlist.id
+                    id: loadlist.id
                 })
 
             } else {
+                
                 list.unshift({
-                    name: playlist.items[i].title,
-                    url: playlist.items[i].url,
-                    time: playlist.items[i].duration,
+                    name: loadlist.items[i].title,
+                    url: loadlist.items[i].url,
+                    time: loadlist.items[i].duration,
                     status: "jump",
                     type: "wait",
                     user: msg.author.username,
-                    id: playlist.id
+                    id: loadlist.id
                 })
 
             }
         }
 
-        msg.channel.send(`已從播放清單 ${playlist.title} 新增` + " `" + i + "` " + "首歌");
+        msg.channel.send(`已從播放清單 ${loadlist.title} 新增` + " `" + i + "` " + "首歌");
 
     } else if (ytdl.validateURL(args)) {
-
+        
         const res = await ytdl.getInfo(args);
         const info = res.videoDetails;
 
@@ -220,7 +226,7 @@ async function churl(msg, args, ck) {
                 status: "normal",
                 type: "wait",
                 user: msg.author.username,
-                id: playlist.id
+                id: info.id
             });
 
             msg.channel.send(`歌曲加入隊列:${info.title}`);
@@ -233,7 +239,7 @@ async function churl(msg, args, ck) {
                 status: "jump",
                 type: "wait",
                 user: msg.author.username,
-                id: playlist.id
+                id: info.id
             });
 
             msg.channel.send(`歌曲差入隊列:${info.title}`);
@@ -242,35 +248,44 @@ async function churl(msg, args, ck) {
         msg.channel.send(`查無此歌曲或歌單`);
         return;
     }
+    
+    playlist = list;
+
     if (connection === undefined) {
         connection = await msg.member.voice.channel.join();
     }
 
-    
+    if (!isplay) {
+        playMusic(msg, list[0].url, list[0].id);
+        isplay = true;
+    }
 }
 
 function shuffle(msg) {
 
 let temp = [];
 temp = temp.concat(list);
+temp.sort(() => Math.random() - 0.5);
 
-for(let i=0;i<list.length;i++){
+shufflelist = shufflelist.concat(temp);
+temp=[];
+playlist=shufflelist;
+// for(let i=0;i<list.length;i++){
 
-    console.log("temp: " + temp.length);
-    console.log("list: " + list.length);
+//     console.log("temp: " + temp.length);
+//     console.log("list: " + list.length);
 
-    let rad = Math.floor(Math.random() * temp.length);
+//     let rad = Math.floor(Math.random() * temp.length);
 
-    console.log("rad: " + rad);
+//     console.log("rad: " + rad);
 
-    shufflelist.push(temp[rad]);
-    temp.splice(rad, 1);
-   
+//     shufflelist.push(temp[rad]);
+//     temp.splice(rad, 1);
     
-}
+// }
 
     shuffleck = true;
     
     msg.channel.send(`清單以隨機撥放`);
-console.log(shufflelist);
+// console.log(shufflelist);
 }
