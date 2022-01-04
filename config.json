@@ -1,5 +1,5 @@
 {
-    "Token": "NDY4NjMyMzk1NjEyOTQ2NDMz.W01t7Q.Sfl8nC1tHAQmO_vQh920Ti9wFGs",
+    "Token": "NDY4NjMyMzk1NjEyOTQ2NDMz.W01t7Q.CEGPWz80w5FVYyFW1TS52LPDnCM",
     "Prefix": "(",
     "channel": "865900599480680458",
     "pingchannel": "865900599480680458",
@@ -8,5 +8,7 @@
     "shutdown": "sd",
     "play": "p",
     "shuffle": "sh",
-    "listmax": 10
+    "listmax": 10,
+    "skip": "sk",
+    "playnow":"pn"
 }

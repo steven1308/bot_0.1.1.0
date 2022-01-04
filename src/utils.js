@@ -45,6 +45,10 @@ function command(msg,command,config) {
         command = 'play';
     }else if (command === config.shuffle) {
         command = 'shuffle';
+    }else if (command === config.skip) {
+        command = 'skip';
+    } else if (command === config.playnow) {
+        command = 'playnow';
     }
 return command;
 }

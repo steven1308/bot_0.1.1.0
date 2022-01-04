@@ -40,7 +40,9 @@ client.on("message", async (msg) => {
     if (!msg.content.startsWith(config.Prefix)) return;
     let command = msg.content.split(" ")[0].replace(config.Prefix, "").toLowerCase(); // ?ping www -> ["?ping", "www"]
     let args = msg.content.split(" ").slice(1);
+
     command = utils.command(msg, command, config);
+
     switch (command) {
         case 'ping':
             ping(msg, args[1], args[0], client, config);
@@ -49,6 +51,8 @@ client.on("message", async (msg) => {
             connection = await msg.member.voice.channel.join();
             break;
         case 'shutdown':
+            list=[];
+            shufflelist=[];
             msg.member.voice.channel.leave();
             break;
         case 'notjoin':
@@ -60,21 +64,17 @@ client.on("message", async (msg) => {
         case 'play':
             await churl(msg, args[0], true);
             break;
-        case 'pn':
+        case 'playnow':
             churl(msg, args[0], false);
             break;
         case 'shuffle':
-
-
-            shuffle();
-
+            shuffle(msg);
             break;
         case "skip":
             if (list.length > 0) {
                 msg.channel.send(`已跳過${list[0].name} `);
                 dispatcher.end();
             } else {
-
                 msg.channel.send(`播放序列是空的!`);
             }
 
@@ -91,8 +91,9 @@ function queue(msg, cord1) {
         return;
     }
 
-    if (shuffleck === true) {
+    if (shuffleck) {
         listch = shufflelist;
+        console.log("sh");
     } else {
         listch = list;
     }
@@ -107,21 +108,21 @@ function queue(msg, cord1) {
         d = listch.length
     }
     console.log(cord1);
-    if (cord1 === undefined||cord1==='1') {
+    if (cord1 === undefined || cord1 === '1') {
         i = 0;
         cord1 = 0;
-        b = `${i / 10 + 1}/${Math.round(a) + 1}頁`;
+        b = `${i / 10 + 1}/${Math.round(a) }頁`;
     } else {
 
         if (cord1 <= Math.round(a) + 1) {
             i = (cord1 - 1) * 10;
 
-            b = `${cord1}/${Math.round(a) + 1}頁`;
-            cord1 =i;
+            b = `${cord1}/${Math.round(a) }頁`;
+            cord1 = i;
         }
     }
-    console.log(cord1);
-    for (k = 0; i <  cord1+ config.listmax; i++, k++) {
+    // console.log(cord1);
+    for (k = 0; i < cord1 + config.listmax; i++, k++) {
         if (listch[i] !== undefined) {
             if (listch[i].type === "play") {
                 queue[k] = "`[" + `${(i + 1).toString().padStart(2, "0")}` + "] ` ▶ " + `${listch[i].name}` + "`" + ` ${listch[i].time}` + "`" + `由 ${listch[i].user} 加入`
@@ -145,7 +146,7 @@ function queue(msg, cord1) {
     queue.push(`序列中目前有 ${listch.length} 個 曲目 ，長度是 [${atime}]`)
 
     client.channels.cache.get(msg.channel.id).send(queue);
-// console.log(queue); 
+    // console.log(queue); 
 }
 
 function playMusic(msg, url) {
@@ -172,7 +173,7 @@ function playMusic(msg, url) {
 
 async function churl(msg, args, ck) {
     let i = 0;
-
+    console.log(args);
     if (ytpl.validateID(args)) {
 
         const playlist = await ytpl(args, { limit: "Infinity" });
@@ -222,7 +223,7 @@ async function churl(msg, args, ck) {
                 id: playlist.id
             });
 
-            msg.channel.send(`歌曲加入隊列：${info.title}`);
+            msg.channel.send(`歌曲加入隊列:${info.title}`);
         } else {
 
             list.unshift({
@@ -235,7 +236,7 @@ async function churl(msg, args, ck) {
                 id: playlist.id
             });
 
-            msg.channel.send(`歌曲差入隊列：${info.title}`);
+            msg.channel.send(`歌曲差入隊列:${info.title}`);
         }
     } else {
         msg.channel.send(`查無此歌曲或歌單`);
@@ -245,36 +246,31 @@ async function churl(msg, args, ck) {
         connection = await msg.member.voice.channel.join();
     }
 
-    if (!isplay) {
-        playMusic(msg, list[0].url);
-        isplay = true;
-    }
-    if (shuffleck === true) {
-        shuffleck = false;
-        shufflec();
-    }
+    
 }
 
-function shuffle() {
-    if (shuffleck === false) {
-        let list1 = list;
-        for (i = 0; i < list.length; i++) {
-            let w = Math.floor(Math.random() * list1.length - i);
-            shufflelist[i] = list1[w];
-            list1.splice(w, 1);
+function shuffle(msg) {
 
-        }
-        shuffleck = true;
-    } else {
-        shufflelist = [];
-        shuffleck = false;
-    }
+let temp = [];
+temp = temp.concat(list);
 
+for(let i=0;i<list.length;i++){
+
+    console.log("temp: " + temp.length);
+    console.log("list: " + list.length);
+
+    let rad = Math.floor(Math.random() * temp.length);
+
+    console.log("rad: " + rad);
+
+    shufflelist.push(temp[rad]);
+    temp.splice(rad, 1);
+   
+    
+}
+
+    shuffleck = true;
+    
     msg.channel.send(`清單以隨機撥放`);
-
-
-
-
-
-
+console.log(shufflelist);
 }
