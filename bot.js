@@ -1,20 +1,30 @@
-const Discord = require("discord.js");
+const { REST } = require('@discordjs/rest');
+const { Routes } = require('discord-api-types/v9');
 const { validateID } = require("ytdl-core");
+const fs = require("fs");
 const ytdl = require('ytdl-core');
 const ytpl = require("ytpl");
 const config = require(`${__dirname}/config.json`);
+// console.log(config.Token1 + config.Token2);
+const Discord = require("discord.js");
 const delight = require("./delight.js");
 const ping = require("./src/ping.js");
 const Record = require("./src/Record.js");
 const utils = require("./src/utils.js")
+const { joinVoiceChannel } = require('@discordjs/voice');
+const { Client, Intents } = require('discord.js');
+const client = new Client({ intents: [
+    Intents.FLAGS.GUILDS,
+    Intents.FLAGS.GUILD_MESSAGES
+] });
 let shuffleck = false;
 let shufflelist = [];
 let playlist=[];
-const client = new Discord.Client();
+
 let connection;
 let dispatcher;
 let list = [];
-client.login(config.Token);
+
 client.on("ready", () => {
     client.channels.cache.get(config.channel).send("bot is online");
     console.log(`bot is online ${client.user.tag}!`);
@@ -30,7 +40,39 @@ client.on("voiceStateUpdate", (oldState, newState) => {
 
 });
 let isplay = false;
-client.on("message", async (msg) => {
+
+const commands = [];
+const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
+
+for (const file of commandFiles) {
+	const command = require(`./commands/${file}`);
+	commands.push(command.data.toJSON());
+}
+
+const rest = new REST({ version: '9' }).setToken(config.Token1 + config.Token2);
+
+(async () => {
+	try {
+		await rest.put(
+			Routes.applicationGuildCommands(client.id, "381392874404577280"),
+			{ body: commands },
+		);
+	} catch (error) {
+		console.error(error);
+	}
+})();
+
+client.on('interactionCreate', async interaction => {
+
+    if (!interaction.isCommand()) return;
+  
+    if (interaction.commandName === 'ping') {
+      await interaction.reply('Pong!');
+    }
+
+  });
+
+client.on("messageCreate", async (msg) => {
 
     if (msg.author.bot) return;
 
@@ -50,7 +92,14 @@ client.on("message", async (msg) => {
             ping(msg, args[1], args[0], client, config);
             break;
         case 'join':
-            connection = await msg.member.voice.channel.join();
+            connection = joinVoiceChannel({
+                channelId: msg.member.voice.channel.id,
+                guildId: msg.guild.id,
+                adapterCreator: msg.guild.voiceAdapterCreator,
+                selfDeaf: false,
+                selfMute: false
+            });
+          
             break;
         case 'shutdown':
             list=[];
@@ -83,8 +132,9 @@ client.on("message", async (msg) => {
 
             break;
         default:
-            client.channels.cache.get(msg.channel.id).send("err");
-
+            // client.channels.cache.get(msg.channel.id).send("err");
+            
+            msg.channel.send("error");
             break;
     }
 });
@@ -270,22 +320,12 @@ temp.sort(() => Math.random() - 0.5);
 shufflelist = shufflelist.concat(temp);
 temp=[];
 playlist=shufflelist;
-// for(let i=0;i<list.length;i++){
 
-//     console.log("temp: " + temp.length);
-//     console.log("list: " + list.length);
-
-//     let rad = Math.floor(Math.random() * temp.length);
-
-//     console.log("rad: " + rad);
-
-//     shufflelist.push(temp[rad]);
-//     temp.splice(rad, 1);
-    
-// }
 
     shuffleck = true;
     
     msg.channel.send(`清單以隨機撥放`);
-// console.log(shufflelist);
+
 }
+
+client.login(config.Token1 + config.Token2);
