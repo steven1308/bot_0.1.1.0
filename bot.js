@@ -5,19 +5,13 @@ const fs = require("fs");
 const ytdl = require('ytdl-core');
 const ytpl = require("ytpl");
 const config = require(`${__dirname}/config.json`);
-const Discord = require("discord.js");
 const delight = require("./delight.js");
 const ping = require("./src/ping.js");
 const Record = require("./src/Record.js");
 const utils = require("./src/utils.js")
-const { joinVoiceChannel } = require('@discordjs/voice');
+const { joinVoiceChannel, VoiceConnectionStatus } = require('@discordjs/voice');
 const { Client, Intents } = require('discord.js');
-const client = new Client({
-    intents: [
-        Intents.FLAGS.GUILDS,
-        Intents.FLAGS.GUILD_MESSAGES
-    ]
-});
+const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
 
 let shuffleck = false;
 let shufflelist = [];
@@ -70,34 +64,48 @@ client.on('interactionCreate', async (interaction) => {
 
     if (!interaction.isCommand()) return;
 
-    // if (interaction.commandName != undefined) {
-    // //   await interaction.reply('Pong!');
-    //     await interaction.deferReply();
-    //     await interaction.editReply('Pong!');
-    // }
+    if (interaction.commandName != undefined) {
+        await interaction.deferReply();
+        await interaction.editReply('Pong!');
+        await interaction.deleteReply();
+    }
+
+    const guild = client.guilds.cache.get(interaction.guildId)
+    const member = guild.members.cache.get(interaction.member.user.id);
 
     switch (interaction.commandName) {
         case 'ping':
             console.log(interaction.options.getInteger("次數"));
-            ping(interaction,  client, config);
+            ping(interaction, client, config);
             await interaction.deferReply();
             await interaction.editReply('Pong!');
             break;
         case 'join':
+
             connection = joinVoiceChannel({
-                channelId: msg.member.voice.channel.id,
-                guildId: msg.guild.id,
-                adapterCreator: msg.guild.voiceAdapterCreator,
+                channelId: member.voice.channelId,
+                guildId: guild.id,
+                adapterCreator: interaction.guild.voiceAdapterCreator,
                 selfDeaf: false,
                 selfMute: false
             });
 
+            connection.on(VoiceConnectionStatus.Disconnected, async (oldState, newState) => {
+
+                console.log("test");
+            
+            });
+
             break;
         case 'shutdown':
+            if (connection === undefined) return;
+            
             list = [];
             shufflelist = [];
             shuffleck = false;
-            msg.member.voice.channel.leave();
+
+            connection.destroy();
+            connection=undefined;
             break;
         case 'notjoin':
             msg.channel.send('請先加入頻道');
@@ -138,10 +146,6 @@ client.on("messageCreate", async (msg) => {
      * 趣味 :)
      */
     delight(msg, client);
-
-
-
-
 });
 
 function queue(msg, cord1) {
