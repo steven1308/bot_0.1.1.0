@@ -5,7 +5,6 @@ const fs = require("fs");
 const ytdl = require('ytdl-core');
 const ytpl = require("ytpl");
 const config = require(`${__dirname}/config.json`);
-// console.log(config.Token1 + config.Token2);
 const Discord = require("discord.js");
 const delight = require("./delight.js");
 const ping = require("./src/ping.js");
@@ -13,13 +12,16 @@ const Record = require("./src/Record.js");
 const utils = require("./src/utils.js")
 const { joinVoiceChannel } = require('@discordjs/voice');
 const { Client, Intents } = require('discord.js');
-const client = new Client({ intents: [
-    Intents.FLAGS.GUILDS,
-    Intents.FLAGS.GUILD_MESSAGES
-] });
+const client = new Client({
+    intents: [
+        Intents.FLAGS.GUILDS,
+        Intents.FLAGS.GUILD_MESSAGES
+    ]
+});
+
 let shuffleck = false;
 let shufflelist = [];
-let playlist=[];
+let playlist = [];
 
 let connection;
 let dispatcher;
@@ -29,6 +31,7 @@ client.on("ready", () => {
     client.channels.cache.get(config.channel).send("bot is online");
     console.log(`bot is online ${client.user.tag}!`);
 });
+
 client.on("voiceStateUpdate", (oldState, newState) => {
 
     if (newState.member.user.bot && newState.channel === null) {
@@ -39,57 +42,46 @@ client.on("voiceStateUpdate", (oldState, newState) => {
     Record(client, config, oldState, newState);
 
 });
+
 let isplay = false;
 
 const commands = [];
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
 
 for (const file of commandFiles) {
-	const command = require(`./commands/${file}`);
-	commands.push(command.data.toJSON());
+    const command = require(`./commands/${file}`);
+    commands.push(command.toJSON());
 }
 
 const rest = new REST({ version: '9' }).setToken(config.Token1 + config.Token2);
 
 (async () => {
-	try {
-		await rest.put(
-			Routes.applicationGuildCommands(client.id, "381392874404577280"),
-			{ body: commands },
-		);
-	} catch (error) {
-		console.error(error);
-	}
+    try {
+        await rest.put(
+            Routes.applicationGuildCommands("468632395612946433", "381392874404577280"),
+            { body: commands },
+        );
+    } catch (error) {
+        console.error(error);
+    }
 })();
 
-client.on('interactionCreate', async interaction => {
+client.on('interactionCreate', async (interaction) => {
 
     if (!interaction.isCommand()) return;
-  
-    if (interaction.commandName === 'ping') {
-      await interaction.reply('Pong!');
-    }
 
-  });
+    // if (interaction.commandName != undefined) {
+    // //   await interaction.reply('Pong!');
+    //     await interaction.deferReply();
+    //     await interaction.editReply('Pong!');
+    // }
 
-client.on("messageCreate", async (msg) => {
-
-    if (msg.author.bot) return;
-
-    /**
-     * 趣味 :)
-     */
-    delight(msg, client);
-
-    if (!msg.content.startsWith(config.Prefix)) return;
-    let command = msg.content.split(" ")[0].replace(config.Prefix, "").toLowerCase(); // ?ping www -> ["?ping", "www"]
-    let args = msg.content.split(" ").slice(1);
-
-    command = utils.command(msg, command, config);
-
-    switch (command) {
+    switch (interaction.commandName) {
         case 'ping':
-            ping(msg, args[1], args[0], client, config);
+            console.log(interaction.options.getInteger("次數"));
+            ping(interaction,  client, config);
+            await interaction.deferReply();
+            await interaction.editReply('Pong!');
             break;
         case 'join':
             connection = joinVoiceChannel({
@@ -99,11 +91,11 @@ client.on("messageCreate", async (msg) => {
                 selfDeaf: false,
                 selfMute: false
             });
-          
+
             break;
         case 'shutdown':
-            list=[];
-            shufflelist=[];
+            list = [];
+            shufflelist = [];
             shuffleck = false;
             msg.member.voice.channel.leave();
             break;
@@ -133,11 +125,25 @@ client.on("messageCreate", async (msg) => {
             break;
         default:
             // client.channels.cache.get(msg.channel.id).send("err");
-            
             msg.channel.send("error");
             break;
-    }
+    };
 });
+
+client.on("messageCreate", async (msg) => {
+
+    if (msg.author.bot) return;
+
+    /**
+     * 趣味 :)
+     */
+    delight(msg, client);
+
+
+
+
+});
+
 function queue(msg, cord1) {
 
     if (list.length === 0) {
@@ -159,13 +165,13 @@ function queue(msg, cord1) {
     if (cord1 === undefined || cord1 === '1') {
         i = 0;
         cord1 = 0;
-        b = `${i / 10 + 1}/${Math.round(a) +1}頁\n`;
+        b = `${i / 10 + 1}/${Math.round(a) + 1}頁\n`;
     } else {
 
         if (cord1 <= Math.round(a) + 1) {
             i = (cord1 - 1) * 10;
 
-            b = `${cord1}/${Math.round(a) }頁\n`;
+            b = `${cord1}/${Math.round(a)}頁\n`;
             cord1 = i;
         }
     }
@@ -175,10 +181,10 @@ function queue(msg, cord1) {
             if (playlist[i].type === "play") {
                 // queue[k] = "`[" + `${(i + 1).toString().padStart(2, "0")}`+ "]`  ▶ " + `${playlist[i].name}` + "`" + `${playlist[i].time}` + "`" + ` 由 `+"**"+`${playlist[i].user}`+"**" +`加入`
                 console.log("test");
-                queue.splice(1,0,"`[" + `${(1).toString().padStart(2, "0")}`+ "]`  ▶ " + `${playlist[i].name}` + "`" + `${playlist[i].time}` + "`" + ` 由 `+"**"+`${playlist[i].user}`+"**" +`加入`)
+                queue.splice(1, 0, "`[" + `${(1).toString().padStart(2, "0")}` + "]`  ▶ " + `${playlist[i].name}` + "`" + `${playlist[i].time}` + "`" + ` 由 ` + "**" + `${playlist[i].user}` + "**" + `加入`)
             } else {
 
-                queue[k] = "`[" + `${(i + 1).toString().padStart(2, "0")}`+ "]`" + `${playlist[i].name}` + "`" + `${playlist[i].time}` + "`" + ` 由 `+"**"+`${playlist[i].user} `+"**"+`加入`
+                queue[k] = "`[" + `${(i + 1).toString().padStart(2, "0")}` + "]`" + `${playlist[i].name}` + "`" + `${playlist[i].time}` + "`" + ` 由 ` + "**" + `${playlist[i].user} ` + "**" + `加入`
             }
         }
     }
@@ -209,7 +215,7 @@ function playMusic(msg, url, id) {
         // list = list.filter(() => )
 
         if (playlist.length > 0) {
-            
+
             playMusic(msg, playlist[0].url);
 
         } else {
@@ -226,15 +232,15 @@ function playMusic(msg, url, id) {
 async function churl(msg, args, ck) {
     let i = 0;
     // console.log(args);
-    
-   
+
+
     if (ytpl.validateID(args)) {
-        
+
         const loadlist = await ytpl(args, { limit: "Infinity" });
-        
+
         for (i = 0; i < loadlist.items.length; i++) {
             if (ck) {
-                
+
                 list.push({
                     name: loadlist.items[i].title,
                     url: loadlist.items[i].url,
@@ -246,7 +252,7 @@ async function churl(msg, args, ck) {
                 })
 
             } else {
-                
+
                 list.unshift({
                     name: loadlist.items[i].title,
                     url: loadlist.items[i].url,
@@ -263,7 +269,7 @@ async function churl(msg, args, ck) {
         msg.channel.send(`已從播放清單 ${loadlist.title} 新增` + " `" + i + "` " + "首歌");
 
     } else if (ytdl.validateURL(args)) {
-        
+
         const res = await ytdl.getInfo(args);
         const info = res.videoDetails;
 
@@ -298,7 +304,7 @@ async function churl(msg, args, ck) {
         msg.channel.send(`查無此歌曲或歌單`);
         return;
     }
-    
+
     playlist = list;
 
     if (connection === undefined) {
@@ -313,17 +319,17 @@ async function churl(msg, args, ck) {
 
 function shuffle(msg) {
 
-let temp = [];
-temp = temp.concat(list);
-temp.sort(() => Math.random() - 0.5);
+    let temp = [];
+    temp = temp.concat(list);
+    temp.sort(() => Math.random() - 0.5);
 
-shufflelist = shufflelist.concat(temp);
-temp=[];
-playlist=shufflelist;
+    shufflelist = shufflelist.concat(temp);
+    temp = [];
+    playlist = shufflelist;
 
 
     shuffleck = true;
-    
+
     msg.channel.send(`清單以隨機撥放`);
 
 }
