@@ -9,18 +9,17 @@ const delight = require("./delight.js");
 const ping = require("./src/ping.js");
 const Record = require("./src/Record.js");
 const utils = require("./src/utils.js")
-const { joinVoiceChannel, VoiceConnectionStatus } = require('@discordjs/voice');
+const voice = require('@discordjs/voice');
 const { Client, Intents } = require('discord.js');
-const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
-
+const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_VOICE_STATES] });
+// const VOICEclient = new Client({ intents:[Intents.FLAGS.GUILD_VOICE_STATES]});
 let shuffleck = false;
 let shufflelist = [];
 let playlist = [];
-
+let guild ,member;
 let connection;
 let dispatcher;
 let list = [];
-
 client.on("ready", () => {
     client.channels.cache.get(config.channel).send("bot is online");
     console.log(`bot is online ${client.user.tag}!`);
@@ -38,7 +37,6 @@ client.on("voiceStateUpdate", (oldState, newState) => {
 });
 
 let isplay = false;
-
 const commands = [];
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
 
@@ -70,30 +68,26 @@ client.on('interactionCreate', async (interaction) => {
         await interaction.deleteReply();
     }
 
-    const guild = client.guilds.cache.get(interaction.guildId)
-    const member = guild.members.cache.get(interaction.member.user.id);
+     guild = client.guilds.cache.get(interaction.guildId);
+     member = guild.members.cache.get(interaction.member.user.id);
+console.log(interaction.channelId);
+      
 
     switch (interaction.commandName) {
         case 'ping':
             console.log(interaction.options.getInteger("次數"));
             ping(interaction, client, config);
-            await interaction.deferReply();
-            await interaction.editReply('Pong!');
+           
+            // interaction.editReply('Pong!');
             break;
         case 'join':
 
-            connection = joinVoiceChannel({
+            connection = voice.joinVoiceChannel({
                 channelId: member.voice.channelId,
                 guildId: guild.id,
                 adapterCreator: interaction.guild.voiceAdapterCreator,
                 selfDeaf: false,
                 selfMute: false
-            });
-
-            connection.on(VoiceConnectionStatus.Disconnected, async (oldState, newState) => {
-
-                console.log("test");
-            
             });
 
             break;
@@ -114,10 +108,12 @@ client.on('interactionCreate', async (interaction) => {
             queue(msg, args[0]);
             break;
         case 'play':
-            await churl(msg, args[0], true);
+           let args = interaction.options.getString('網址');
+        
+        await churl(interaction, args, true);
             break;
         case 'playnow':
-            churl(msg, args[0], false);
+            churl(client, args[0], false);
             break;
         case 'shuffle':
             shuffle(msg);
@@ -208,32 +204,48 @@ function queue(msg, cord1) {
     // console.log(queue); 
 }
 
-function playMusic(msg, url, id) {
+async function playMusic(msg, url, id) {
 
-    dispatcher = connection.play(ytdl(url, { filter: 'audioonly' }));
-    list[0].type = "play";
-    dispatcher.setVolume(0.06);
+    const player = createAudioPlayer();
 
-    dispatcher.on('finish', () => {
+    // const stream = await ytdl(url, {
+    //     highWaterMark: 1 << 25,
+    //     filter: 'audioonly'
+    // });
 
-        // list = list.filter(() => )
+    const resource = createAudioResource("1.mp3");
 
-        if (playlist.length > 0) {
+    // const resource = createAudioResource(stream, {
+    //     inputType: StreamType.Opus
+    // });
 
-            playMusic(msg, playlist[0].url);
+    connection.subscribe(player);
+    player.play(resource);
 
-        } else {
-            isplay = false;
-            msg.channel.send('目前沒有音樂了，請加入音樂 :D');
-        }
-    });
+    // dispatcher = connection.play(ytdl(url, { filter: 'audioonly' }));
+    // list[0].type = "play";
+    // dispatcher.setVolume(0.06);
+
+    // dispatcher.on('finish', () => {
+
+    //     // list = list.filter(() => )
+
+    //     if (playlist.length > 0) {
+
+    //         playMusic(msg, playlist[0].url);
+
+    //     } else {
+    //         isplay = false;
+    //         msg.channel.send('目前沒有音樂了，請加入音樂 :D');
+    //     }
+    // });
 
 
     return dispatcher;
 }
 
 
-async function churl(msg, args, ck) {
+async function churl(interaction, args, ck) {
     let i = 0;
     // console.log(args);
 
@@ -250,7 +262,7 @@ async function churl(msg, args, ck) {
                     url: loadlist.items[i].url,
                     time: loadlist.items[i].duration,
                     status: "normal",
-                    user: msg.author.username,
+                    // user: msg.author.username,
                     type: "wait",
                     id: loadlist.id
                 })
@@ -263,14 +275,15 @@ async function churl(msg, args, ck) {
                     time: loadlist.items[i].duration,
                     status: "jump",
                     type: "wait",
-                    user: msg.author.username,
+                    // user: msg.author.username,
                     id: loadlist.id
                 })
 
             }
         }
-
-        msg.channel.send(`已從播放清單 ${loadlist.title} 新增` + " `" + i + "` " + "首歌");
+       
+        client.channels.cache.get(interaction.channelId).send(`已從播放清單 ${loadlist.title} 新增` + " `" + i + "` " + "首歌");
+        
 
     } else if (ytdl.validateURL(args)) {
 
@@ -285,11 +298,11 @@ async function churl(msg, args, ck) {
                 time: utils.getTime(info.lengthSeconds),
                 status: "normal",
                 type: "wait",
-                user: msg.author.username,
+                // user: msg.author.username,
                 id: info.id
             });
 
-            msg.channel.send(`歌曲加入隊列:${info.title}`);
+            interaction.channel.send(`歌曲加入隊列:${info.title}`);
         } else {
 
             list.unshift({
@@ -298,25 +311,34 @@ async function churl(msg, args, ck) {
                 time: utils.getTime(info.lengthSeconds),
                 status: "jump",
                 type: "wait",
-                user: msg.author.username,
+                // user: msg.author.username,
                 id: info.id
             });
-
-            msg.channel.send(`歌曲差入隊列:${info.title}`);
+            client.channels.cache.get(interaction.channel.id).send(`歌曲差入隊列:${info.title}`);
+            // msg.channel.send(`歌曲差入隊列:${info.title}`);
         }
     } else {
-        msg.channel.send(`查無此歌曲或歌單`);
+        client.channels.cache.get(interaction.channel.id).send(`查無此歌曲或歌單`);
+        // msg.channel.send(`查無此歌曲或歌單`);
         return;
     }
 
     playlist = list;
 
-    if (connection === undefined) {
-        connection = await msg.member.voice.channel.join();
-    }
+    // if (connection === undefined) {
+     
+
+    //     connection = joinVoiceChannel({
+    //         channelId: member.voice.channelId,
+    //         guildId: guild.id,
+    //         adapterCreator: interaction.guild.voiceAdapterCreator,
+    //         selfDeaf: false,
+    //         selfMute: false
+    //     });
+    // }
 
     if (!isplay) {
-        playMusic(msg, list[0].url, list[0].id);
+        playMusic(interaction, list[0].url, list[0].id);
         isplay = true;
     }
 }
