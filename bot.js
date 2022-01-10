@@ -36,6 +36,8 @@ client.on("voiceStateUpdate", (oldState, newState) => {
 
 });
 
+// test
+
 let isplay = false;
 const commands = [];
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
