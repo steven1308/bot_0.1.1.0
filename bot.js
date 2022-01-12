@@ -12,7 +12,6 @@ const utils = require("./src/utils.js")
 const voice = require('@discordjs/voice');
 const { Client, Intents } = require('discord.js');
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_VOICE_STATES] });
-// const VOICEclient = new Client({ intents:[Intents.FLAGS.GUILD_VOICE_STATES]});
 let shuffleck = false;
 let shufflelist = [];
 let playlist = [];
@@ -208,20 +207,20 @@ function queue(msg, cord1) {
 
 async function playMusic(msg, url, id) {
 
-    const player = createAudioPlayer();
+    const player = voice.createAudioPlayer();
 
     // const stream = await ytdl(url, {
     //     highWaterMark: 1 << 25,
     //     filter: 'audioonly'
     // });
 
-    const resource = createAudioResource("1.mp3");
+    const resource = voice.createAudioResource("1.mp3");
 
     // const resource = createAudioResource(stream, {
     //     inputType: StreamType.Opus
     // });
 
-    connection.subscribe(player);
+    // connection.subscribe(player);
     player.play(resource);
 
     // dispatcher = connection.play(ytdl(url, { filter: 'audioonly' }));
