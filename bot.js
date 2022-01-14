@@ -1,43 +1,29 @@
+
+const { Client, Intents } = require('discord.js');
+const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_VOICE_STATES] });
 const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');
 const { validateID } = require("ytdl-core");
 const fs = require("fs");
 const ytdl = require('ytdl-core');
 const ytpl = require("ytpl");
-const config = require(`${__dirname}/config.json`);
+const voice = require('@discordjs/voice');
+
 const delight = require("./delight.js");
 const ping = require("./src/ping.js");
 const Record = require("./src/Record.js");
-const utils = require("./src/utils.js")
-const voice = require('@discordjs/voice');
-const { Client, Intents } = require('discord.js');
-const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_VOICE_STATES] });
+const utils = require("./src/utils.js");
+const config = require(`${__dirname}/config.json`);
+
 let shuffleck = false;
 let shufflelist = [];
 let playlist = [];
-let guild ,member;
+let guild, member;
 let connection;
 let dispatcher;
 let list = [];
-client.on("ready", () => {
-    client.channels.cache.get(config.channel).send("bot is online");
-    console.log(`bot is online ${client.user.tag}!`);
-});
+let isPlay = false;
 
-client.on("voiceStateUpdate", (oldState, newState) => {
-
-    if (newState.member.user.bot && newState.channel === null) {
-        list = [];
-        connection = undefined;
-    }
-
-    Record(client, config, oldState, newState);
-
-});
-
-
-
-let isplay = false;
 const commands = [];
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
 
@@ -48,7 +34,11 @@ for (const file of commandFiles) {
 
 const rest = new REST({ version: '9' }).setToken(config.Token1 + config.Token2);
 
-(async () => {
+client.on("ready", async () => {
+
+    client.channels.cache.get(config.channel).send("bot is online");
+    console.log(`bot is online ${client.user.tag}!`);
+
     try {
         await rest.put(
             Routes.applicationGuildCommands("468632395612946433", "381392874404577280"),
@@ -57,7 +47,27 @@ const rest = new REST({ version: '9' }).setToken(config.Token1 + config.Token2);
     } catch (error) {
         console.error(error);
     }
-})();
+});
+
+client.on("voiceStateUpdate", (oldState, newState) => {
+
+    if (newState.member.user.bot && newState.channel === null) {
+        list = [];
+        connection = undefined;
+    }
+
+    Record(client, config, oldState, newState);
+});
+
+client.on("messageCreate", async (msg) => {
+
+    if (msg.author.bot) return;
+
+    /**
+     * 趣味 :)
+     */
+    delight(msg, client);
+});
 
 client.on('interactionCreate', async (interaction) => {
 
@@ -69,21 +79,19 @@ client.on('interactionCreate', async (interaction) => {
         await interaction.deleteReply();
     }
 
-     guild = client.guilds.cache.get(interaction.guildId);
-     member = guild.members.cache.get(interaction.member.user.id);
-console.log(interaction.channelId);
-      
+    guild = client.guilds.cache.get(interaction.guildId);
+    member = guild.members.cache.get(interaction.member.user.id);
 
     switch (interaction.commandName) {
         case 'ping':
+
             console.log(interaction.options.getInteger("次數"));
             ping(interaction, client, config);
-           
-            // interaction.editReply('Pong!');
+
             break;
         case 'join':
 
-            connection = voice.joinVoiceChannel({
+            voice.joinVoiceChannel({
                 channelId: member.voice.channelId,
                 guildId: guild.id,
                 adapterCreator: interaction.guild.voiceAdapterCreator,
@@ -94,13 +102,14 @@ console.log(interaction.channelId);
             break;
         case 'shutdown':
             if (connection === undefined) return;
-            
+
             list = [];
             shufflelist = [];
             shuffleck = false;
 
             connection.destroy();
-            connection=undefined;
+            connection = undefined;
+
             break;
         case 'notjoin':
             msg.channel.send('請先加入頻道');
@@ -109,17 +118,23 @@ console.log(interaction.channelId);
             queue(msg, args[0]);
             break;
         case 'play':
-           let args = interaction.options.getString('網址');
-        
-        await churl(interaction, args, true);
+
+            let args = interaction.options.getString('網址');
+            await churl(interaction, args, true);
+
             break;
         case 'playnow':
+
             churl(client, args[0], false);
+
             break;
         case 'shuffle':
+
             shuffle(msg);
+
             break;
         case "skip":
+
             if (list.length > 0) {
                 msg.channel.send(`已跳過${list[0].name} `);
                 dispatcher.end();
@@ -133,16 +148,6 @@ console.log(interaction.channelId);
             msg.channel.send("error");
             break;
     };
-});
-
-client.on("messageCreate", async (msg) => {
-
-    if (msg.author.bot) return;
-
-    /**
-     * 趣味 :)
-     */
-    delight(msg, client);
 });
 
 function queue(msg, cord1) {
@@ -220,7 +225,7 @@ async function playMusic(msg, url, id) {
     //     inputType: StreamType.Opus
     // });
 
-    // connection.subscribe(player);
+    connection.subscribe(player);
     player.play(resource);
 
     // dispatcher = connection.play(ytdl(url, { filter: 'audioonly' }));
@@ -248,8 +253,6 @@ async function playMusic(msg, url, id) {
 
 async function churl(interaction, args, ck) {
     let i = 0;
-    // console.log(args);
-
 
     if (ytpl.validateID(args)) {
 
@@ -282,9 +285,9 @@ async function churl(interaction, args, ck) {
 
             }
         }
-       
+
         client.channels.cache.get(interaction.channelId).send(`已從播放清單 ${loadlist.title} 新增` + " `" + i + "` " + "首歌");
-        
+
 
     } else if (ytdl.validateURL(args)) {
 
@@ -327,7 +330,7 @@ async function churl(interaction, args, ck) {
     playlist = list;
 
     // if (connection === undefined) {
-     
+
 
     //     connection = joinVoiceChannel({
     //         channelId: member.voice.channelId,
@@ -338,9 +341,9 @@ async function churl(interaction, args, ck) {
     //     });
     // }
 
-    if (!isplay) {
+    if (!isPlay) {
         playMusic(interaction, list[0].url, list[0].id);
-        isplay = true;
+        isPlay = true;
     }
 }
 
