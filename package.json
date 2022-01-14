@@ -14,9 +14,9 @@
     "@discordjs/voice": "^0.7.5",
     "discord-api-types": "^0.26.1",
     "discord.js": "^13.5.0",
-    "ffmpeg-static": "^4.2.8",
+    "ffmpeg-static": "^4.4.1",
     "nodemon": "^2.0.15",
-    "ytdl-core": "^4.9.2",
+    "ytdl-core": "^4.10.0",
     "ytpl": "^2.0.5"
   }
 }
