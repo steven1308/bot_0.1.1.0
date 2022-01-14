@@ -101,21 +101,24 @@ client.on('interactionCreate', async (interaction) => {
 
             break;
         case 'shutdown':
-            if (connection === undefined) return;
+
+            const connection = voice.getVoiceConnection("381392874404577280");
+            connection.disconnect();
 
             list = [];
             shufflelist = [];
             shuffleck = false;
 
-            connection.destroy();
-            connection = undefined;
+            
 
             break;
         case 'notjoin':
             msg.channel.send('請先加入頻道');
             break;
         case 'list':
-            queue(msg, args[0]);
+
+            queue(interaction, interaction.options.getInteger("頁數"));
+
             break;
         case 'play':
 
@@ -136,27 +139,24 @@ client.on('interactionCreate', async (interaction) => {
         case "skip":
 
             if (list.length > 0) {
-                msg.channel.send(`已跳過${list[0].name} `);
-                dispatcher.end();
+                interaction.channel.send(`已跳過${list[0].name} `);
+                playFinish();
             } else {
-                msg.channel.send(`播放序列是空的!`);
+                interaction.channel.send(`播放序列是空的!`);
             }
 
-            break;
-        default:
-            // client.channels.cache.get(msg.channel.id).send("err");
-            msg.channel.send("error");
             break;
     };
 });
 
-function queue(msg, cord1) {
+function queue(interaction, cord1) {
 
     if (list.length === 0) {
-        client.channels.cache.get(msg.channel.id).send('歌單是空的');
+        client.channels.cache.get(interaction.channel.id).send('歌單是空的');
         return;
     }
 
+    console.log(cord1);
 
     let queue = [];
     let i = 0, b;
@@ -168,7 +168,7 @@ function queue(msg, cord1) {
         d = playlist.length
     }
     // console.log(cord1);
-    if (cord1 === undefined || cord1 === '1') {
+    if (cord1 === null || cord1 === '1') {
         i = 0;
         cord1 = 0;
         b = `${i / 10 + 1}/${Math.round(a) + 1}頁\n`;
@@ -206,31 +206,35 @@ function queue(msg, cord1) {
 
     queue.push(`\n序列中目前有 ${playlist.length} 個 曲目 ，長度是 [${atime}]`)
 
-    client.channels.cache.get(msg.channel.id).send(queue);
-    // console.log(queue); 
+    client.channels.cache.get(interaction.channel.id).send(queue.join('\n'));
 }
 
-async function playMusic(msg, url, id) {
+async function playMusic(url, id) {
 
+    const connection = voice.getVoiceConnection("381392874404577280");
     const player = voice.createAudioPlayer();
 
-    // const stream = await ytdl(url, {
-    //     highWaterMark: 1 << 25,
-    //     filter: 'audioonly'
-    // });
+    const stream = await ytdl(url, {
+        filter: 'audioonly'
+    });
 
-    const resource = voice.createAudioResource("1.mp3");
-
-    // const resource = createAudioResource(stream, {
-    //     inputType: StreamType.Opus
-    // });
+    const resource = voice.createAudioResource(stream);
 
     connection.subscribe(player);
     player.play(resource);
 
-    // dispatcher = connection.play(ytdl(url, { filter: 'audioonly' }));
-    // list[0].type = "play";
-    // dispatcher.setVolume(0.06);
+    list[0].type = "play";
+
+    player.on("stateChange", (oldState, newState) => {
+
+        if (newState.status == "idle") {
+            console.log("The song finished");
+
+            // list = list.filter(() => )
+            playFinish();
+        }
+
+    });
 
     // dispatcher.on('finish', () => {
 
@@ -266,7 +270,7 @@ async function churl(interaction, args, ck) {
                     url: loadlist.items[i].url,
                     time: loadlist.items[i].duration,
                     status: "normal",
-                    // user: msg.author.username,
+                    user: interaction.user.username,
                     type: "wait",
                     id: loadlist.id
                 })
@@ -279,7 +283,7 @@ async function churl(interaction, args, ck) {
                     time: loadlist.items[i].duration,
                     status: "jump",
                     type: "wait",
-                    // user: msg.author.username,
+                    user: interaction.user.username,
                     id: loadlist.id
                 })
 
@@ -302,7 +306,7 @@ async function churl(interaction, args, ck) {
                 time: utils.getTime(info.lengthSeconds),
                 status: "normal",
                 type: "wait",
-                // user: msg.author.username,
+                user: interaction.user.username,
                 id: info.id
             });
 
@@ -315,7 +319,7 @@ async function churl(interaction, args, ck) {
                 time: utils.getTime(info.lengthSeconds),
                 status: "jump",
                 type: "wait",
-                // user: msg.author.username,
+                user: interaction.user.username,
                 id: info.id
             });
             client.channels.cache.get(interaction.channel.id).send(`歌曲差入隊列:${info.title}`);
@@ -329,20 +333,17 @@ async function churl(interaction, args, ck) {
 
     playlist = list;
 
-    // if (connection === undefined) {
+    voice.joinVoiceChannel({
+        channelId: member.voice.channelId,
+        guildId: guild.id,
+        adapterCreator: interaction.guild.voiceAdapterCreator,
+        selfDeaf: false,
+        selfMute: false
+    });
 
-
-    //     connection = joinVoiceChannel({
-    //         channelId: member.voice.channelId,
-    //         guildId: guild.id,
-    //         adapterCreator: interaction.guild.voiceAdapterCreator,
-    //         selfDeaf: false,
-    //         selfMute: false
-    //     });
-    // }
 
     if (!isPlay) {
-        playMusic(interaction, list[0].url, list[0].id);
+        playMusic(list[0].url, list[0].id);
         isPlay = true;
     }
 }
@@ -362,6 +363,19 @@ function shuffle(msg) {
 
     msg.channel.send(`清單以隨機撥放`);
 
+}
+
+function playFinish() {
+
+    playlist.shift();
+    if (playlist.length > 0) {
+
+        playMusic(playlist[0].url);
+
+    } else {
+        isplay = false;
+        msg.channel.send('目前沒有音樂了，請加入音樂 :D');
+    }
 }
 
 client.login(config.Token1 + config.Token2);
