@@ -13,6 +13,7 @@ const delight = require("./delight.js");
 const ping = require("./src/ping.js");
 const Record = require("./src/Record.js");
 const utils = require("./src/utils.js");
+const { match } = require('assert');
 const config = require(`${__dirname}/config.json`);
 
 let shuffleck = false;
@@ -59,15 +60,15 @@ client.on("voiceStateUpdate", (oldState, newState) => {
     Record(client, config, oldState, newState);
 });
 
-client.on("messageCreate", async (msg) => {
+// client.on("messageCreate", async (msg) => {
 
-    if (msg.author.bot) return;
+//     if (msg.author.bot) return;
 
-    /**
-     * 趣味 :)
-     */
-    delight(msg, client);
-});
+//     /**
+//      * 趣味 :)
+//      */
+//     delight(msg, client);
+// });
 
 client.on('interactionCreate', async (interaction) => {
 
@@ -109,7 +110,7 @@ client.on('interactionCreate', async (interaction) => {
             shufflelist = [];
             shuffleck = false;
 
-            
+
 
             break;
         case 'notjoin':
@@ -126,6 +127,12 @@ client.on('interactionCreate', async (interaction) => {
             await churl(interaction, args, true);
 
             break;
+        case 'playdefault': {
+            let args = interaction.options.getString('網址');
+            await churl(interaction, args, true);
+
+            break;
+        }
         case 'playnow':
 
             churl(client, args[0], false);
@@ -133,7 +140,7 @@ client.on('interactionCreate', async (interaction) => {
             break;
         case 'shuffle':
 
-            shuffle(msg);
+            shuffle(interaction);
 
             break;
         case "skip":
@@ -156,7 +163,7 @@ function queue(interaction, cord1) {
         return;
     }
 
-    console.log(cord1);
+
 
     let queue = [];
     let i = 0, b;
@@ -186,8 +193,8 @@ function queue(interaction, cord1) {
         if (playlist[i] !== undefined) {
             if (playlist[i].type === "play") {
                 // queue[k] = "`[" + `${(i + 1).toString().padStart(2, "0")}`+ "]`  ▶ " + `${playlist[i].name}` + "`" + `${playlist[i].time}` + "`" + ` 由 `+"**"+`${playlist[i].user}`+"**" +`加入`
-                console.log("test");
-                queue.splice(1, 0, "`[" + `${(1).toString().padStart(2, "0")}` + "]`  ▶ " + `${playlist[i].name}` + "`" + `${playlist[i].time}` + "`" + ` 由 ` + "**" + `${playlist[i].user}` + "**" + `加入`)
+
+                queue.splice(1, 0, "`[" + `${(1).toString().padStart(2, "0")}` + "]`  ► " + `${playlist[i].name}` + "`" + `${playlist[i].time}` + "`" + ` 由 ` + "**" + `${playlist[i].user}` + "**" + `加入`)
             } else {
 
                 queue[k] = "`[" + `${(i + 1).toString().padStart(2, "0")}` + "]`" + `${playlist[i].name}` + "`" + `${playlist[i].time}` + "`" + ` 由 ` + "**" + `${playlist[i].user} ` + "**" + `加入`
@@ -223,7 +230,7 @@ async function playMusic(url, id) {
     connection.subscribe(player);
     player.play(resource);
 
-    list[0].type = "play";
+    playlist[0].type = "play";
 
     player.on("stateChange", (oldState, newState) => {
 
@@ -257,41 +264,42 @@ async function playMusic(url, id) {
 
 async function churl(interaction, args, ck) {
     let i = 0;
+    let tempList = [];
 
     if (ytpl.validateID(args)) {
 
-        const loadlist = await ytpl(args, { limit: "Infinity" });
+        const ytplData = await ytpl(args, { limit: "Infinity" });
 
-        for (i = 0; i < loadlist.items.length; i++) {
+        for (i = 0; i < ytplData.items.length; i++) {
             if (ck) {
 
-                list.push({
-                    name: loadlist.items[i].title,
-                    url: loadlist.items[i].url,
-                    time: loadlist.items[i].duration,
+                tempList.push({
+                    name: ytplData.items[i].title,
+                    url: ytplData.items[i].url,
+                    time: ytplData.items[i].duration,
                     status: "normal",
                     user: interaction.user.username,
                     type: "wait",
-                    id: loadlist.id
+                    id: ytplData.id
                 })
 
             } else {
 
-                list.unshift({
-                    name: loadlist.items[i].title,
-                    url: loadlist.items[i].url,
-                    time: loadlist.items[i].duration,
+                tempList.unshift({
+                    name: ytplData.items[i].title,
+                    url: ytplData.items[i].url,
+                    time: ytplData.items[i].duration,
                     status: "jump",
                     type: "wait",
                     user: interaction.user.username,
-                    id: loadlist.id
+                    id: ytplData.id
                 })
 
             }
         }
 
-        client.channels.cache.get(interaction.channelId).send(`已從播放清單 ${loadlist.title} 新增` + " `" + i + "` " + "首歌");
 
+        client.channels.cache.get(interaction.channelId).send(`已從播放清單 ${ytplData.title} 新增` + " `" + i + "` " + "首歌");
 
     } else if (ytdl.validateURL(args)) {
 
@@ -300,7 +308,7 @@ async function churl(interaction, args, ck) {
 
         if (ck) {
 
-            list.push({
+            tempList.push({
                 name: info.title,
                 url: args,
                 time: utils.getTime(info.lengthSeconds),
@@ -313,7 +321,7 @@ async function churl(interaction, args, ck) {
             interaction.channel.send(`歌曲加入隊列:${info.title}`);
         } else {
 
-            list.unshift({
+            tempList.unshift({
                 name: info.title,
                 url: args,
                 time: utils.getTime(info.lengthSeconds),
@@ -330,9 +338,13 @@ async function churl(interaction, args, ck) {
         // msg.channel.send(`查無此歌曲或歌單`);
         return;
     }
-
+    list = list.concat(tempList);
     playlist = list;
+    if (shuffleck) {
 
+        shuffljoin(tempList);
+    }
+    tempList = [];
     voice.joinVoiceChannel({
         channelId: member.voice.channelId,
         guildId: guild.id,
@@ -343,25 +355,65 @@ async function churl(interaction, args, ck) {
 
 
     if (!isPlay) {
-        playMusic(list[0].url, list[0].id);
+        playMusic(playlist[0].url, playlist[0].id);
         isPlay = true;
     }
 }
+function shuffljoin(tempList) {
+    console.log("in");
 
+    tempList.sort(() => Math.random() - 0.5);
+    let rd = 0;
+
+
+    for (let i = 0; i < tempList.length; i++) {
+        rd = Math.floor(Math.random() * shufflelist.length);
+        console.log(rd);
+        shufflelist.splice(rd, 0, tempList[i]);
+
+    }
+
+playlist=shufflelist;
+
+}
 function shuffle(msg) {
+    if (shuffleck == false) {
+        if (list.length != 0) {
+            let temp = [];
+            let temp2 = [];
 
-    let temp = [];
-    temp = temp.concat(list);
-    temp.sort(() => Math.random() - 0.5);
+            temp = temp.concat(list);
+            temp2 = temp.shift();
+            temp.sort(() => Math.random() - 0.5);
+            shufflelist = shufflelist.concat(temp);
+            shufflelist.unshift(temp2);
+            temp = [];
+            temp2 = [];
+            playlist = shufflelist;
+            shuffleck = true;
+            msg.channel.send(`播放器將隨機播放本播放列表`);
+        } else {
+            shuffleck = true;
+            msg.channel.send(`播放器將隨機播放本播放列表`);
+        }
 
-    shufflelist = shufflelist.concat(temp);
-    temp = [];
-    playlist = shufflelist;
+    } else {
+        if (list.length != 0) {
+            playlist = list;
+            shuffleck = false;
+            msg.channel.send(`播放器將不再隨機播放本播放列表`);
+        } else {
+            shuffleck = false;
+            msg.channel.send(`播放器將不再隨機播放本播放列表`);
+        }
 
 
-    shuffleck = true;
 
-    msg.channel.send(`清單以隨機撥放`);
+    }
+
+
+
+
 
 }
 
@@ -373,7 +425,7 @@ function playFinish() {
         playMusic(playlist[0].url);
 
     } else {
-        isplay = false;
+        isPlay = false;
         msg.channel.send('目前沒有音樂了，請加入音樂 :D');
     }
 }
