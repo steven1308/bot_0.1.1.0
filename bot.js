@@ -174,7 +174,8 @@ function queue(interaction, cord1) {
     } else {
         d = playlist.length
     }
-    // console.log(cord1);
+   
+    
     if (cord1 === null || cord1 === '1') {
         i = 0;
         cord1 = 0;
@@ -188,7 +189,8 @@ function queue(interaction, cord1) {
             cord1 = i;
         }
     }
-    // console.log(cord1);
+    
+    
     for (k = 0; i < cord1 + config.listmax; i++, k++) {
         if (playlist[i] !== undefined) {
             if (playlist[i].type === "play") {
@@ -233,29 +235,10 @@ async function playMusic(url, id) {
     playlist[0].type = "play";
 
     player.on("stateChange", (oldState, newState) => {
-
         if (newState.status == "idle") {
-            console.log("The song finished");
-
-            // list = list.filter(() => )
             playFinish();
         }
-
     });
-
-    // dispatcher.on('finish', () => {
-
-    //     // list = list.filter(() => )
-
-    //     if (playlist.length > 0) {
-
-    //         playMusic(msg, playlist[0].url);
-
-    //     } else {
-    //         isplay = false;
-    //         msg.channel.send('目前沒有音樂了，請加入音樂 :D');
-    //     }
-    // });
 
 
     return dispatcher;
@@ -360,7 +343,7 @@ async function churl(interaction, args, ck) {
     }
 }
 function shuffljoin(tempList) {
-    console.log("in");
+    
 
     tempList.sort(() => Math.random() - 0.5);
     let rd = 0;
@@ -368,7 +351,8 @@ function shuffljoin(tempList) {
 
     for (let i = 0; i < tempList.length; i++) {
         rd = Math.floor(Math.random() * shufflelist.length);
-        console.log(rd);
+        
+        
         shufflelist.splice(rd, 0, tempList[i]);
 
     }
