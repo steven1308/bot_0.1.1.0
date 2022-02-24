@@ -1,6 +1,6 @@
 function time() {
     const date = new Date();
-    return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+    return `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, "0")}/${date.getDate().toString().padStart(2, "0")} ${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}:${date.getSeconds().toString().padStart(2, "0")}`;
 }
 
 function getTime(seconds) {
@@ -8,30 +8,30 @@ function getTime(seconds) {
     let m = Math.floor((seconds / 60 % 60)).toString().padStart(2, "0");
     let s = Math.floor((seconds % 60)).toString().padStart(2, "0");
     if (h > 0) {
-       return h + ":" + m + ":" + s;
+        return h + ":" + m + ":" + s;
     } else {
-         return m + ":" + s;
+        return m + ":" + s;
     }
 }
 
-function mintosec(min){
+function mintosec(min) {
     let c
 
-let timeArray = min.split(":");
+    let timeArray = min.split(":");
 
-if(timeArray.length===3){
- c=Number(timeArray[0])*3600+Number(timeArray[1])*60+Number(timeArray[2]);
+    if (timeArray.length === 3) {
+        c = Number(timeArray[0]) * 3600 + Number(timeArray[1]) * 60 + Number(timeArray[2]);
 
 
-}else{
-c=Number(timeArray[0])*60+Number(timeArray[1]);
+    } else {
+        c = Number(timeArray[0]) * 60 + Number(timeArray[1]);
+
+    }
+
+    return c;
 
 }
-
-return c;
-
-}
-function command(msg,command,config) {
+function command(msg, command, config) {
 
     if (command === config.ping) {
         command = 'ping';
@@ -43,15 +43,15 @@ function command(msg,command,config) {
         command = 'shutdown';
     } else if (command === config.play) {
         command = 'play';
-    }else if (command === config.shuffle) {
+    } else if (command === config.shuffle) {
         command = 'shuffle';
-    }else if (command === config.skip) {
+    } else if (command === config.skip) {
         command = 'skip';
     } else if (command === config.playnow) {
         command = 'playnow';
     }
-return command;
+    return command;
 }
 
 
-module.exports = { time, getTime ,command, mintosec};
+module.exports = { time, getTime, command, mintosec };

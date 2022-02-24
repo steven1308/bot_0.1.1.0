@@ -3,24 +3,19 @@ const { Client, Intents } = require('discord.js');
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_VOICE_STATES] });
 const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');
-const { validateID } = require("ytdl-core");
 const fs = require("fs");
 const ytdl = require('ytdl-core');
 const ytpl = require("ytpl");
 const voice = require('@discordjs/voice');
-
-const delight = require("./delight.js");
 const ping = require("./src/ping.js");
 const Record = require("./src/Record.js");
 const utils = require("./src/utils.js");
-const { match } = require('assert');
 const config = require(`${__dirname}/config.json`);
 
 let shuffleck = false;
 let shufflelist = [];
 let playlist = [];
 let guild, member;
-let connection;
 let dispatcher;
 let list = [];
 let isPlay = false;
@@ -109,9 +104,6 @@ client.on('interactionCreate', async (interaction) => {
             list = [];
             shufflelist = [];
             shuffleck = false;
-
-
-
             break;
         case 'notjoin':
             msg.channel.send('請先加入頻道');
@@ -146,7 +138,7 @@ client.on('interactionCreate', async (interaction) => {
         case "skip":
 
             if (list.length > 0) {
-                interaction.channel.send(`已跳過${list[0].name} `);
+                interaction.channel.send(`已跳過${playlist[0].name} `);
                 playFinish();
             } else {
                 interaction.channel.send(`播放序列是空的!`);
@@ -162,9 +154,6 @@ function queue(interaction, cord1) {
         client.channels.cache.get(interaction.channel.id).send('歌單是空的');
         return;
     }
-
-
-
     let queue = [];
     let i = 0, b;
     let a = playlist.length / 10;
@@ -174,8 +163,8 @@ function queue(interaction, cord1) {
     } else {
         d = playlist.length
     }
-   
-    
+
+
     if (cord1 === null || cord1 === '1') {
         i = 0;
         cord1 = 0;
@@ -189,13 +178,11 @@ function queue(interaction, cord1) {
             cord1 = i;
         }
     }
-    
-    
+
+
     for (k = 0; i < cord1 + config.listmax; i++, k++) {
         if (playlist[i] !== undefined) {
             if (playlist[i].type === "play") {
-                // queue[k] = "`[" + `${(i + 1).toString().padStart(2, "0")}`+ "]`  ▶ " + `${playlist[i].name}` + "`" + `${playlist[i].time}` + "`" + ` 由 `+"**"+`${playlist[i].user}`+"**" +`加入`
-
                 queue.splice(1, 0, "`[" + `${(1).toString().padStart(2, "0")}` + "]`  ► " + `${playlist[i].name}` + "`" + `${playlist[i].time}` + "`" + ` 由 ` + "**" + `${playlist[i].user}` + "**" + `加入`)
             } else {
 
@@ -343,7 +330,7 @@ async function churl(interaction, args, ck) {
     }
 }
 function shuffljoin(tempList) {
-    
+
 
     tempList.sort(() => Math.random() - 0.5);
     let rd = 0;
@@ -351,13 +338,13 @@ function shuffljoin(tempList) {
 
     for (let i = 0; i < tempList.length; i++) {
         rd = Math.floor(Math.random() * shufflelist.length);
-        
-        
+
+
         shufflelist.splice(rd, 0, tempList[i]);
 
     }
 
-playlist=shufflelist;
+    playlist = shufflelist;
 
 }
 function shuffle(msg) {
@@ -365,7 +352,6 @@ function shuffle(msg) {
         if (list.length != 0) {
             let temp = [];
             let temp2 = [];
-
             temp = temp.concat(list);
             temp2 = temp.shift();
             temp.sort(() => Math.random() - 0.5);
@@ -394,15 +380,23 @@ function shuffle(msg) {
 
 
     }
-
-
-
-
-
 }
 
 function playFinish() {
 
+    if (shuffleck) {
+
+        for (let i = 0; i < list.length; i++) {
+            if (playlist[0].id === list[i].id) {
+                list.splice(i, 1);
+                break;
+            }
+        }
+
+
+
+
+    }
     playlist.shift();
     if (playlist.length > 0) {
 
