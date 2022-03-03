@@ -408,5 +408,4 @@ function playFinish() {
     }
 }
 
-//test
 client.login(config.Token1 + config.Token2);
