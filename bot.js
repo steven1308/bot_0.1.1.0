@@ -407,5 +407,5 @@ function playFinish() {
         msg.channel.send('目前沒有音樂了，請加入音樂 :D');
     }
 }
-//test
+
 client.login(config.Token1 + config.Token2);
