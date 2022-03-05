@@ -381,7 +381,7 @@ function shuffle(msg) {
 
     }
 }
-
+//text
 function playFinish() {
 
     if (shuffleck) {
