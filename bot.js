@@ -114,17 +114,13 @@ client.on('interactionCreate', async (interaction) => {
 
             break;
         case 'play':
-
             let args = interaction.options.getString('網址');
+            if(args===null){
+                 args = interaction.options.getString('預設');
+            }
             await churl(interaction, args, true);
-
             break;
-        case 'playdefault': {
-            let args = interaction.options.getString('網址');
-            await churl(interaction, args, true);
-
-            break;
-        }
+      
         case 'playnow':
 
             churl(client, args[0], false);
@@ -301,11 +297,11 @@ async function churl(interaction, args, ck) {
                 id: info.id
             });
             client.channels.cache.get(interaction.channel.id).send(`歌曲差入隊列:${info.title}`);
-            // msg.channel.send(`歌曲差入隊列:${info.title}`);
+          
         }
     } else {
         client.channels.cache.get(interaction.channel.id).send(`查無此歌曲或歌單`);
-        // msg.channel.send(`查無此歌曲或歌單`);
+       
         return;
     }
     list = list.concat(tempList);
