@@ -207,7 +207,8 @@ async function playMusic(url, id) {
     const player = voice.createAudioPlayer();
 
     const stream = await ytdl(url, {
-        filter: 'audioonly'
+        filter: 'audioonly',
+        highWaterMark: 1 << 25
     });
 
     const resource = voice.createAudioResource(stream);
@@ -219,10 +220,14 @@ async function playMusic(url, id) {
 
     player.on("stateChange", (oldState, newState) => {
         if (newState.status == "idle") {
+            console.log("test");
             playFinish();
         }
     });
 
+    player.on("error", (error) => {
+        console.log(error);
+    });
 
     return dispatcher;
 }
