@@ -9,7 +9,9 @@ module.exports = new SlashCommandBuilder()
 	.addStringOption(option =>
 		option.setName('預設')
 			.setDescription('選取清單名稱')
-			.addChoice('test', 'https://www.youtube.com/playlist?list=PLW2qsjqU0e5fzjM_O3PpuSa81F4Sb0K35')
+			.addChoice('歌單test', 'https://www.youtube.com/playlist?list=PLW2qsjqU0e5fzjM_O3PpuSa81F4Sb0K35')
+			.addChoice('單首test', 'https://youtu.be/XnbxAaIJHfI')
 			.addChoice('動畫歌曲', 'https://www.youtube.com/playlist?list=PLW2qsjqU0e5cjheTzIy7VeBfdsYSG1mIp')
+			.addChoice('vtuber', 'https://www.youtube.com/playlist?list=PL0Q586E608sBIR_9Pl-UrYe1xBjKOasGz')
 			.addChoice('A', 'https://www.youtube.com/playlist?list=PLW2qsjqU0e5csx4PiaSTJ7XA2mhd7Tqnc')
 	);
