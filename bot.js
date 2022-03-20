@@ -10,7 +10,7 @@ const voice = require('@discordjs/voice');
 const ping = require("./src/ping.js");
 const Record = require("./src/Record.js");
 const utils = require("./src/utils.js");
-const config = require(`${__dirname}/config.json`);
+const config = require("./src/config/config.js");
 
 let shuffleck = false;
 let shufflelist = [];
