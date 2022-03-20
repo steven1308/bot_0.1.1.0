@@ -31,27 +31,27 @@ function mintosec(min) {
     return c;
 
 }
-function command(msg, command, config) {
+// function command(msg, command, config) {
 
-    if (command === config.ping) {
-        command = 'ping';
-    } else if (msg.member.voice.channelID === null) {
-        command = 'notjoin';
-    } else if (command === config.join) {
-        command = 'join';
-    } else if (command === config.shutdown) {
-        command = 'shutdown';
-    } else if (command === config.play) {
-        command = 'play';
-    } else if (command === config.shuffle) {
-        command = 'shuffle';
-    } else if (command === config.skip) {
-        command = 'skip';
-    } else if (command === config.playnow) {
-        command = 'playnow';
-    }
-    return command;
-}
+//     if (command === config.ping) {
+//         command = 'ping';
+//     } else if (msg.member.voice.channelID === null) {
+//         command = 'notjoin';
+//     } else if (command === config.join) {
+//         command = 'join';
+//     } else if (command === config.shutdown) {
+//         command = 'shutdown';
+//     } else if (command === config.play) {
+//         command = 'play';
+//     } else if (command === config.shuffle) {
+//         command = 'shuffle';
+//     } else if (command === config.skip) {
+//         command = 'skip';
+//     } else if (command === config.playnow) {
+//         command = 'playnow';
+//     }
+//     return command;
+// }
 
 
-module.exports = { time, getTime, command, mintosec };
+module.exports = { time, getTime, mintosec };

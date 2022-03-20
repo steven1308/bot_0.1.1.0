@@ -99,11 +99,13 @@ client.on('interactionCreate', async (interaction) => {
         case 'shutdown':
 
             const connection = voice.getVoiceConnection("381392874404577280");
-            connection.disconnect();
+            
 
             list = [];
             shufflelist = [];
             shuffleck = false;
+            connection.disconnect();
+            isPlay=false;
             break;
         case 'notjoin':
             msg.channel.send('請先加入頻道');
@@ -119,6 +121,7 @@ client.on('interactionCreate', async (interaction) => {
                  args = interaction.options.getString('預設');
             }
             await churl(interaction, args, true);
+          
             break;
       
         case 'playnow':
@@ -141,8 +144,26 @@ client.on('interactionCreate', async (interaction) => {
             }
 
             break;
+            case "nowplay":
+
+                nowplay(interaction)
+
+break;
     };
 });
+
+function nowplay(interaction){
+
+console.log(playlist[0].ownerChannelName);
+
+const embed =new Discord.MessageEmbed()
+        .setTitle('現在播放')
+        .setColor(0xFF60AF)
+        .setDescription(`${playlist[0].ChannelName}/n${playlist[0].name}/n/n由:${playlist[0].user}加入`);
+
+        client.channels.cache.get(interaction.channel.id).send({embeds: [embed]});
+
+}
 
 function queue(interaction, cord1) {
 
@@ -202,12 +223,13 @@ function queue(interaction, cord1) {
 }
 
 async function playMusic(url, id) {
-
+console.log("test");
     const connection = voice.getVoiceConnection("381392874404577280");
     const player = voice.createAudioPlayer();
 
     const stream = await ytdl(url, {
-        filter: 'audioonly'
+        filter: 'audioonly',
+        highWaterMark: 1 << 25
     });
 
     const resource = voice.createAudioResource(stream);
@@ -219,10 +241,14 @@ async function playMusic(url, id) {
 
     player.on("stateChange", (oldState, newState) => {
         if (newState.status == "idle") {
+            console.log("test");
             playFinish();
         }
     });
 
+    player.on("error", (error) => {
+        console.error(error);
+    });
 
     return dispatcher;
 }
@@ -235,7 +261,7 @@ async function churl(interaction, args, ck) {
     if (ytpl.validateID(args)) {
 
         const ytplData = await ytpl(args, { limit: "Infinity" });
-
+        
         for (i = 0; i < ytplData.items.length; i++) {
             if (ck) {
 
@@ -271,12 +297,13 @@ async function churl(interaction, args, ck) {
 
         const res = await ytdl.getInfo(args);
         const info = res.videoDetails;
-
+        console.log(info.ownerChannelName);
         if (ck) {
 
             tempList.push({
                 name: info.title,
                 url: args,
+                ChannelName:info.ownerChannelName,
                 time: utils.getTime(info.lengthSeconds),
                 status: "normal",
                 type: "wait",
@@ -290,6 +317,7 @@ async function churl(interaction, args, ck) {
             tempList.unshift({
                 name: info.title,
                 url: args,
+               ChannelName:info.ownerChannelName,
                 time: utils.getTime(info.lengthSeconds),
                 status: "jump",
                 type: "wait",
@@ -324,6 +352,7 @@ async function churl(interaction, args, ck) {
         playMusic(playlist[0].url, playlist[0].id);
         isPlay = true;
     }
+
 }
 function shuffljoin(tempList) {
 
