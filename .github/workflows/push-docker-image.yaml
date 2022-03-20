@@ -27,3 +27,4 @@ jobs:
       uses: distributhor/workflow-webhook@v1
       env:
         webhook_url: "https://webhook.site/a61b8bd5-99dc-4c18-a073-eca6ae427e1c"
+        webhook_secret: "dadadadad"
