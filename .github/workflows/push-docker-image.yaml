@@ -24,7 +24,7 @@ jobs:
       run: docker buildx build --platform linux/amd64 --output type=image,registry.insecure=true,push=true -t 220.134.105.30:56125/monitor-bot .
       
     - name: Invoke deployment hook
-      uses: distributhor/workflow-webhook@v1
+      uses: distributhor/workflow-webhook@v2
       env:
         webhook_url: "https://webhook.site/a61b8bd5-99dc-4c18-a073-eca6ae427e1c"
-        webhook_secret: "dadadadad"
+        webhook_secret: "YYeeWWxxVVxx"
