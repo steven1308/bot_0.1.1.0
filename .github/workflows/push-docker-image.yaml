@@ -21,4 +21,4 @@ jobs:
       run: echo "::set-output name=date::$(date +'%Y-%m-%d--%M-%S')"
       
     - name: Build the Docker image And Push
-      run: docker buildx build --platform linux/amd64 --output type=image,registry.insecure=true,push=true -t 220.134.105.30:56125/monitor-bot:$(date +%s) .
+      run: docker buildx build --platform linux/amd64 --output type=image,registry.insecure=true,push=true -t 220.134.105.30:56125/monitor-bot .
