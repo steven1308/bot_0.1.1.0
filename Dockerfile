@@ -8,7 +8,6 @@ COPY package-lock.json ./app/package-lock.json
 COPY src ./app/src
 COPY commands ./app/commands
 COPY bot.js ./app/bot.js
-COPY config.json ./app/config.json
 COPY delight.js ./app/delight.js
 
 WORKDIR /app
