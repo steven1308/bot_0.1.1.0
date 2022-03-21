@@ -19,7 +19,7 @@ RUN npm install
 RUN npm prune --production
 
 # Start production image build
-FROM node:16-alpine
+FROM node:16
 
 # copy from build image
 COPY --from=BUILD /app ./
