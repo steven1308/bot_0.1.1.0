@@ -10,7 +10,7 @@ const voice = require('@discordjs/voice');
 const ping = require("./src/ping.js");
 const Record = require("./src/Record.js");
 const utils = require("./src/utils.js");
-const config = require(`${__dirname}/config.json`);
+const config = require("./src/config/config.js");
 
 let shuffleck = false;
 let shufflelist = [];
@@ -37,7 +37,7 @@ client.on("ready", async () => {
 
     try {
         await rest.put(
-            Routes.applicationGuildCommands("468632395612946433", "381392874404577280"),
+            Routes.applicationGuildCommands(client.user.id, "381392874404577280"),
             { body: commands },
         );
     } catch (error) {

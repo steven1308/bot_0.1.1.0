@@ -26,4 +26,7 @@ FROM node:16-alpine
 COPY --from=BUILD /app ./
 COPY --from=BUILD /app/node_modules ./node_modules
 
+# Add env
+ENV NODE_ENV=production
+
 CMD ["node", "bot.js"]
