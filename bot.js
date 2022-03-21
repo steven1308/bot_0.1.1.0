@@ -19,6 +19,8 @@ let guild, member;
 let dispatcher;
 let list = [];
 let isPlay = false;
+let audioPlayer;
+let pauseck = false;
 
 const commands = [];
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
@@ -107,8 +109,10 @@ client.on('interactionCreate', async (interaction) => {
             connection.disconnect();
             isPlay = false;
             break;
-        case 'notjoin':
-            msg.channel.send('請先加入頻道');
+        case 'pause':
+            pause(interaction);
+
+
             break;
         case 'list':
 
@@ -152,8 +156,28 @@ client.on('interactionCreate', async (interaction) => {
     };
 });
 
+
+function pause(interaction) {
+    if (!pauseck) {
+        interaction.channel.send('已經暫停');
+        audioPlayer.pause();
+        pauseck = true;
+    } else {
+        audioPlayer.unpause();
+        pauseck = false;
+    }
+
+
+}
+
+
+
+
+
+
+
 function nowplay(interaction) {
-    
+
     console.log(playlist[0]);
 
     const embed = new MessageEmbed()
@@ -223,9 +247,9 @@ function queue(interaction, cord1) {
 }
 
 async function playMusic(url, id) {
-    console.log("test");
+
     const connection = voice.getVoiceConnection("381392874404577280");
-    const player = voice.createAudioPlayer();
+    audioPlayer = voice.createAudioPlayer();
 
     const stream = await ytdl(url, {
         filter: 'audioonly',
@@ -234,19 +258,19 @@ async function playMusic(url, id) {
 
     const resource = voice.createAudioResource(stream);
 
-    connection.subscribe(player);
-    player.play(resource);
+    connection.subscribe(audioPlayer);
+    audioPlayer.play(resource);
 
     playlist[0].type = "play";
 
-    player.on("stateChange", (oldState, newState) => {
+    audioPlayer.on("stateChange", (oldState, newState) => {
         if (newState.status == "idle") {
             console.log("test");
             playFinish();
         }
     });
 
-    player.on("error", (error) => {
+    audioPlayer.on("error", (error) => {
         console.error(error);
     });
 
@@ -333,9 +357,11 @@ async function churl(interaction, args, ck) {
             client.channels.cache.get(interaction.channel.id).send(`歌曲差入隊列:${info.title}`);
 
         }
-    } else {
+    } else if (pauseck) {
+        pause(interaction);
+    }else{
         client.channels.cache.get(interaction.channel.id).send(`查無此歌曲或歌單`);
-
+        
         return;
     }
     list = list.concat(tempList);
