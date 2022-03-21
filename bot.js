@@ -19,6 +19,8 @@ let guild, member;
 let dispatcher;
 let list = [];
 let isPlay = false;
+let audioPlayer;
+let pauseck = false;
 
 const commands = [];
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
@@ -79,6 +81,13 @@ client.on('interactionCreate', async (interaction) => {
     member = guild.members.cache.get(interaction.member.user.id);
 
     switch (interaction.commandName) {
+
+        case 'game':
+
+            game(interaction, interaction.options.getInteger("數字"));
+            break;
+
+
         case 'ping':
 
             console.log(interaction.options.getInteger("次數"));
@@ -107,8 +116,10 @@ client.on('interactionCreate', async (interaction) => {
             connection.disconnect();
             isPlay = false;
             break;
-        case 'notjoin':
-            msg.channel.send('請先加入頻道');
+        case 'pause':
+            pause(interaction);
+
+
             break;
         case 'list':
 
@@ -152,14 +163,107 @@ client.on('interactionCreate', async (interaction) => {
     };
 });
 
-function nowplay(interaction) {
-    
-    console.log(playlist[0]);
+
+
+let gamemember = [];
+function game(interaction, number) {
+    let rd;
+    for (let i = 0; i < gamemember.length; i++) {
+
+        if (gamemember[i].player === interaction.user.username) {
+            if (number === gamemember[i].rdnumber) {
+                console.log('1');
+                const embed = new MessageEmbed()
+                    .setTitle('數字猜猜樂')
+                    .setColor(0xFF60AF)
+                    .setDescription(`恭喜${gamemember[i].player}回答正確\n，答案是${gamemember[i].rdnumber}`);
+                client.channels.cache.get(interaction.channel.id).send({ embeds: [embed] });
+
+                gamemember.splice(i, 1);
+
+            } else if (gamemember[i].frequency<2) {
+
+                const embed = new MessageEmbed()
+                .setTitle('數字猜猜樂')
+                .setColor(0xFF60AF)
+                .setDescription(`噗噗${gamemember[i].player}你好費喔\n，答案是${gamemember[i].rdnumber}這樣都猜不到`);
+                client.channels.cache.get(interaction.channel.id).send({ embeds: [embed] });
+                gamemember.splice(i, 1);
+            } else if (number > gamemember[i].rdnumber) {
+                console.log('2');
+                gamemember[i].frequency--;
+                const embed = new MessageEmbed()
+                    .setTitle('數字猜猜樂')
+                    .setColor(0xFF60AF)
+                    .setDescription(`${gamemember[i].player}可惜，正確答案比${number}小\n你還剩${ gamemember[i].frequency}次機會。`);
+                client.channels.cache.get(interaction.channel.id).send({ embeds: [embed] });
+
+
+
+            } else if (number < gamemember[i].rdnumber) {
+                console.log('3');
+                gamemember[i].frequency--;
+                const embed = new MessageEmbed()
+                    .setTitle('數字猜猜樂')
+                    .setColor(0xFF60AF)
+                    .setDescription(`${gamemember[i].player}可惜，正確答案比${number}大\n你還剩${gamemember[i].frequency}次機會。`);
+
+                client.channels.cache.get(interaction.channel.id).send({ embeds: [embed] });
+            }
+
+            return;
+
+        }
+
+    }
+    rd = Math.floor(Math.random() * 99+1);
+    console.log(rd);
+    gamemember.push({
+
+        rdnumber: rd,
+        player: interaction.user.username,
+        frequency: 5
+
+    })
+    game(interaction, number)
+
+
+
+}
+
+
+
+
+
+function pause(interaction) {
+    if (!pauseck) {
+        interaction.channel.send('已經暫停');
+        audioPlayer.pause();
+        pauseck = true;
+    } else {
+        audioPlayer.unpause();
+        pauseck = false;
+    }
+
+
+}
+
+
+
+
+
+
+
+async function nowplay(interaction) {
+
+    const res = await ytdl.getInfo(playlist[0].url);
+    const info = res.videoDetails;
 
     const embed = new MessageEmbed()
+
         .setTitle('現在播放')
         .setColor(0xFF60AF)
-        .setDescription(`${playlist[0].ChannelName}\n${playlist[0].name}\n\n由:${playlist[0].user}加入`);
+        .setDescription(`${info.ownerChannelName}\n${playlist[0].name}\n\n${playlist[0].url}\n歌曲由:${playlist[0].user}加入`);
 
     client.channels.cache.get(interaction.channel.id).send({ embeds: [embed] });
 
@@ -223,9 +327,9 @@ function queue(interaction, cord1) {
 }
 
 async function playMusic(url, id) {
-    console.log("test");
+
     const connection = voice.getVoiceConnection("381392874404577280");
-    const player = voice.createAudioPlayer();
+    audioPlayer = voice.createAudioPlayer();
 
     const stream = await ytdl(url, {
         filter: 'audioonly',
@@ -234,19 +338,19 @@ async function playMusic(url, id) {
 
     const resource = voice.createAudioResource(stream);
 
-    connection.subscribe(player);
-    player.play(resource);
+    connection.subscribe(audioPlayer);
+    audioPlayer.play(resource);
 
     playlist[0].type = "play";
 
-    player.on("stateChange", (oldState, newState) => {
+    audioPlayer.on("stateChange", (oldState, newState) => {
         if (newState.status == "idle") {
-            console.log("test");
+
             playFinish();
         }
     });
 
-    player.on("error", (error) => {
+    audioPlayer.on("error", (error) => {
         console.error(error);
     });
 
@@ -264,13 +368,12 @@ async function churl(interaction, args, ck) {
 
         for (i = 0; i < ytplData.items.length; i++) {
 
-            const res = await ytdl.getInfo(ytplData.items[i].shortUrl);
-            const info = res.videoDetails;
+            // 
 
             if (ck) {
 
                 tempList.push({
-                    ChannelName: info.ownerChannelName,
+                   
                     name: ytplData.items[i].title,
                     url: ytplData.items[i].url,
                     time: ytplData.items[i].duration,
@@ -283,7 +386,7 @@ async function churl(interaction, args, ck) {
             } else {
 
                 tempList.unshift({
-                    ChannelName: info.ownerChannelName,
+                    
                     name: ytplData.items[i].title,
                     url: ytplData.items[i].url,
                     time: ytplData.items[i].duration,
@@ -303,13 +406,13 @@ async function churl(interaction, args, ck) {
 
         const res = await ytdl.getInfo(args);
         const info = res.videoDetails;
-        console.log(info.ownerChannelName);
+
         if (ck) {
 
             tempList.push({
                 name: info.title,
                 url: args,
-                ChannelName: info.ownerChannelName,
+               
                 time: utils.getTime(info.lengthSeconds),
                 status: "normal",
                 type: "wait",
@@ -323,7 +426,7 @@ async function churl(interaction, args, ck) {
             tempList.unshift({
                 name: info.title,
                 url: args,
-                ChannelName: info.ownerChannelName,
+               
                 time: utils.getTime(info.lengthSeconds),
                 status: "jump",
                 type: "wait",
@@ -333,6 +436,8 @@ async function churl(interaction, args, ck) {
             client.channels.cache.get(interaction.channel.id).send(`歌曲差入隊列:${info.title}`);
 
         }
+    } else if (pauseck) {
+        pause(interaction);
     } else {
         client.channels.cache.get(interaction.channel.id).send(`查無此歌曲或歌單`);
 
