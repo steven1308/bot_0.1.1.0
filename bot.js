@@ -1,5 +1,5 @@
 
-const { Client, Intents } = require('discord.js');
+const { Client, Intents, MessageEmbed } = require('discord.js');
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_VOICE_STATES] });
 const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');
@@ -99,13 +99,13 @@ client.on('interactionCreate', async (interaction) => {
         case 'shutdown':
 
             const connection = voice.getVoiceConnection("381392874404577280");
-            
+
 
             list = [];
             shufflelist = [];
             shuffleck = false;
             connection.disconnect();
-            isPlay=false;
+            isPlay = false;
             break;
         case 'notjoin':
             msg.channel.send('請先加入頻道');
@@ -117,13 +117,13 @@ client.on('interactionCreate', async (interaction) => {
             break;
         case 'play':
             let args = interaction.options.getString('網址');
-            if(args===null){
-                 args = interaction.options.getString('預設');
+            if (args === null) {
+                args = interaction.options.getString('預設');
             }
             await churl(interaction, args, true);
-          
+
             break;
-      
+
         case 'playnow':
 
             churl(client, args[0], false);
@@ -144,24 +144,24 @@ client.on('interactionCreate', async (interaction) => {
             }
 
             break;
-            case "nowplay":
+        case "nowplay":
 
-                nowplay(interaction)
+            nowplay(interaction)
 
-break;
+            break;
     };
 });
 
-function nowplay(interaction){
+function nowplay(interaction) {
+    
+    console.log(playlist[0]);
 
-console.log(playlist[0].ownerChannelName);
-
-const embed =new Discord.MessageEmbed()
+    const embed = new MessageEmbed()
         .setTitle('現在播放')
         .setColor(0xFF60AF)
-        .setDescription(`${playlist[0].ChannelName}/n${playlist[0].name}/n/n由:${playlist[0].user}加入`);
+        .setDescription(`${playlist[0].ChannelName}\n${playlist[0].name}\n\n由:${playlist[0].user}加入`);
 
-        client.channels.cache.get(interaction.channel.id).send({embeds: [embed]});
+    client.channels.cache.get(interaction.channel.id).send({ embeds: [embed] });
 
 }
 
@@ -223,7 +223,7 @@ function queue(interaction, cord1) {
 }
 
 async function playMusic(url, id) {
-console.log("test");
+    console.log("test");
     const connection = voice.getVoiceConnection("381392874404577280");
     const player = voice.createAudioPlayer();
 
@@ -261,11 +261,16 @@ async function churl(interaction, args, ck) {
     if (ytpl.validateID(args)) {
 
         const ytplData = await ytpl(args, { limit: "Infinity" });
-        
+
         for (i = 0; i < ytplData.items.length; i++) {
+
+            const res = await ytdl.getInfo(ytplData.items[i].shortUrl);
+            const info = res.videoDetails;
+
             if (ck) {
 
                 tempList.push({
+                    ChannelName: info.ownerChannelName,
                     name: ytplData.items[i].title,
                     url: ytplData.items[i].url,
                     time: ytplData.items[i].duration,
@@ -278,6 +283,7 @@ async function churl(interaction, args, ck) {
             } else {
 
                 tempList.unshift({
+                    ChannelName: info.ownerChannelName,
                     name: ytplData.items[i].title,
                     url: ytplData.items[i].url,
                     time: ytplData.items[i].duration,
@@ -303,7 +309,7 @@ async function churl(interaction, args, ck) {
             tempList.push({
                 name: info.title,
                 url: args,
-                ChannelName:info.ownerChannelName,
+                ChannelName: info.ownerChannelName,
                 time: utils.getTime(info.lengthSeconds),
                 status: "normal",
                 type: "wait",
@@ -317,7 +323,7 @@ async function churl(interaction, args, ck) {
             tempList.unshift({
                 name: info.title,
                 url: args,
-               ChannelName:info.ownerChannelName,
+                ChannelName: info.ownerChannelName,
                 time: utils.getTime(info.lengthSeconds),
                 status: "jump",
                 type: "wait",
@@ -325,11 +331,11 @@ async function churl(interaction, args, ck) {
                 id: info.id
             });
             client.channels.cache.get(interaction.channel.id).send(`歌曲差入隊列:${info.title}`);
-          
+
         }
     } else {
         client.channels.cache.get(interaction.channel.id).send(`查無此歌曲或歌單`);
-       
+
         return;
     }
     list = list.concat(tempList);
