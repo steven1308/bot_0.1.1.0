@@ -178,7 +178,7 @@ function pause(interaction) {
 
 function nowplay(interaction) {
 
-    console.log(playlist[0]);
+ 
 
     const embed = new MessageEmbed()
         .setTitle('現在播放')
@@ -265,7 +265,7 @@ async function playMusic(url, id) {
 
     audioPlayer.on("stateChange", (oldState, newState) => {
         if (newState.status == "idle") {
-            console.log("test");
+           
             playFinish();
         }
     });
@@ -327,7 +327,7 @@ async function churl(interaction, args, ck) {
 
         const res = await ytdl.getInfo(args);
         const info = res.videoDetails;
-        console.log(info.ownerChannelName);
+       
         if (ck) {
 
             tempList.push({
