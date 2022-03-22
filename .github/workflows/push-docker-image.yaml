@@ -27,6 +27,7 @@ jobs:
     - name: Build the Docker image And Push
       id: firs-docker-pull
       run: ${{ env.DOCKER_PULL_COMMAND }}
+      continue-on-error: true
 
     - name: Retry again on failure Build the Docker image And Push
       id: second-docker-pull
