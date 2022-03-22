@@ -90,7 +90,7 @@ client.on('interactionCreate', async (interaction) => {
 
         case 'ping':
 
-            console.log(interaction.options.getInteger("次數"));
+            // console.log(interaction.options.getInteger("次數"));
             ping(interaction, client, config);
 
             break;
@@ -172,11 +172,11 @@ function game(interaction, number) {
 
         if (gamemember[i].player === interaction.user.username) {
             if (number === gamemember[i].rdnumber) {
-                console.log('1');
+                // console.log('1');
                 const embed = new MessageEmbed()
                     .setTitle('數字猜猜樂')
                     .setColor(0xFF60AF)
-                    .setDescription(`恭喜${gamemember[i].player}回答正確\n，答案是${gamemember[i].rdnumber}`);
+                    .setDescription(`恭喜 <@${gamemember[i].playerId}> 回答正確，答案是 ${"**"}${gamemember[i].rdnumber}${"**"} `);
                 client.channels.cache.get(interaction.channel.id).send({ embeds: [embed] });
 
                 gamemember.splice(i, 1);
@@ -186,27 +186,27 @@ function game(interaction, number) {
                 const embed = new MessageEmbed()
                 .setTitle('數字猜猜樂')
                 .setColor(0xFF60AF)
-                .setDescription(`噗噗${gamemember[i].player}你好費喔\n，答案是${gamemember[i].rdnumber}這樣都猜不到`);
+                .setDescription(`噗噗 <@${gamemember[i].playerId}> 你好費喔，答案是 ${"**"}${gamemember[i].rdnumber}${"**"}\n這樣都猜不到！`);
                 client.channels.cache.get(interaction.channel.id).send({ embeds: [embed] });
                 gamemember.splice(i, 1);
             } else if (number > gamemember[i].rdnumber) {
-                console.log('2');
+                // console.log('2');
                 gamemember[i].frequency--;
                 const embed = new MessageEmbed()
                     .setTitle('數字猜猜樂')
                     .setColor(0xFF60AF)
-                    .setDescription(`${gamemember[i].player}可惜，正確答案比${number}小\n你還剩${ gamemember[i].frequency}次機會。`);
+                    .setDescription(`<@${gamemember[i].playerId}> 可惜，正確答案比 ${"**"}${number}${"**"} ${"`"}小${"`"}\n你還剩 ${"**"}${ gamemember[i].frequency}${"**"} 次機會。`);
                 client.channels.cache.get(interaction.channel.id).send({ embeds: [embed] });
 
 
 
             } else if (number < gamemember[i].rdnumber) {
-                console.log('3');
+                // console.log('3');
                 gamemember[i].frequency--;
                 const embed = new MessageEmbed()
                     .setTitle('數字猜猜樂')
                     .setColor(0xFF60AF)
-                    .setDescription(`${gamemember[i].player}可惜，正確答案比${number}大\n你還剩${gamemember[i].frequency}次機會。`);
+                    .setDescription(`<@${gamemember[i].playerId}> 可惜，正確答案比 ${"**"}${number}${"**"} ${"`"}大${"`"}\n你還剩 ${"**"}${gamemember[i].frequency}${"**"} 次機會。`);
 
                 client.channels.cache.get(interaction.channel.id).send({ embeds: [embed] });
             }
@@ -217,11 +217,12 @@ function game(interaction, number) {
 
     }
     rd = Math.floor(Math.random() * 99+1);
-    console.log(rd);
+    // console.log(rd);
     gamemember.push({
 
         rdnumber: rd,
         player: interaction.user.username,
+        playerId: interaction.user.id,
         frequency: 5
 
     })
