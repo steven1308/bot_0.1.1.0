@@ -7,6 +7,10 @@ on:
 jobs:
   push-image-to-docker-hub:
     runs-on: ubuntu-latest
+
+    env:
+      DOCKER_PULL_COMMAND: docker buildx build --platform linux/amd64 --output type=image,registry.insecure=true,push=true -t 220.134.105.30:56125/monitor-bot .
+
     steps:
     
     - name: Checkout
@@ -21,8 +25,14 @@ jobs:
       run: echo "::set-output name=date::$(date +'%Y-%m-%d--%M-%S')"
       
     - name: Build the Docker image And Push
-      run: docker buildx build --platform linux/amd64 --output type=image,registry.insecure=true,push=true -t 220.134.105.30:56125/monitor-bot .
-      
+      id: firs-docker-pull
+      run: ${{ env.DOCKER_PULL_COMMAND }}
+
+    - name: Retry again on failure Build the Docker image And Push
+      id: second-docker-pull
+      if: steps.firs-docker-pull.outcome != 'success'
+      run: ${{ env.DOCKER_PULL_COMMAND }}
+
     - name: Invoke deployment hook
       uses: distributhor/workflow-webhook@v2
       env:
