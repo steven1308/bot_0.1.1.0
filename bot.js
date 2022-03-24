@@ -186,7 +186,7 @@ function game(interaction, number) {
                 const embed = new MessageEmbed()
                 .setTitle('數字猜猜樂')
                 .setColor(0xFF60AF)
-                .setDescription(`噗噗~ <@${gamemember[i].playerId}>你選的${number}是錯的，好菜喔~\n答案是 ${"**"}${gamemember[i].rdnumber}${"**"}\n這樣都猜不到！`);
+                .setDescription(`噗噗~ <@${gamemember[i].playerId}>你選的 ${"**"}${number}${"**"} 是錯的\n好菜喔~答案是 ${"**"}${gamemember[i].rdnumber}${"**"}\n這樣都猜不到！`);
                 client.channels.cache.get(interaction.channel.id).send({ embeds: [embed] });
                 gamemember.splice(i, 1);
             } else if (number > gamemember[i].rdnumber) {
