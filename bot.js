@@ -216,7 +216,7 @@ function game(interaction, number) {
         }
 
     }
-    rd = Math.floor(Math.random() * 99+1);
+    rd = Math.floor(Math.random() * 99)+1;
     // console.log(rd);
     gamemember.push({
 
