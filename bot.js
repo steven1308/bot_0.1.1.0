@@ -41,6 +41,7 @@ client.on("ready", async () => {
         await rest.put(
             Routes.applicationGuildCommands(client.user.id, "381392874404577280"),
             { body: commands },
+            // { body: "" },
         );
     } catch (error) {
         console.error(error);
@@ -216,7 +217,7 @@ function game(interaction, number) {
         }
 
     }
-    rd = Math.floor(Math.random() * 99+1);
+    rd = Math.floor(Math.random() * 99)+1;
     // console.log(rd);
     gamemember.push({
 
@@ -444,12 +445,19 @@ async function churl(interaction, args, ck) {
 
         return;
     }
-    list = list.concat(tempList);
-    playlist = list;
+    
+    
     if (shuffleck) {
 
         shuffljoin(tempList);
+    }else{
+        list = list.concat(tempList);
+        playlist = list;
+
     }
+    
+  
+    
     tempList = [];
     voice.joinVoiceChannel({
         channelId: member.voice.channelId,
@@ -489,6 +497,8 @@ function shuffle(msg) {
         if (list.length != 0) {
             let temp = [];
             let temp2 = [];
+            playlist=[];
+            shufflelist=[];
             temp = temp.concat(list);
             temp2 = temp.shift();
             temp.sort(() => Math.random() - 0.5);
@@ -508,6 +518,7 @@ function shuffle(msg) {
         if (list.length != 0) {
             playlist = list;
             shuffleck = false;
+            
             msg.channel.send(`播放器將不再隨機播放本播放列表`);
         } else {
             shuffleck = false;
@@ -517,6 +528,7 @@ function shuffle(msg) {
 
 
     }
+    
 }
 
 function playFinish() {
