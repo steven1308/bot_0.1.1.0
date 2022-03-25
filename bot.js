@@ -40,7 +40,7 @@ client.on("ready", async () => {
     try {
         await rest.put(
             Routes.applicationGuildCommands(client.user.id, "381392874404577280"),
-            { body: commands },
+            // { body: commands },
             { body: "" },
         );
     } catch (error) {
