@@ -108,15 +108,8 @@ client.on('interactionCreate', async (interaction) => {
 
             break;
         case 'shutdown':
-
-            const connection = voice.getVoiceConnection("381392874404577280");
-
-
-            list = [];
-            shufflelist = [];
-            shuffleck = false;
-            connection.disconnect();
-            isPlay = false;
+            shutdown(voice);
+        
             break;
         case 'pause':
             pause(interaction);
@@ -165,7 +158,16 @@ client.on('interactionCreate', async (interaction) => {
     };
 });
 
+function shutdown(voice){
 
+    const connection = voice.getVoiceConnection("381392874404577280");
+            list = [];
+            shufflelist = [];
+            shuffleck = false;
+            connection.disconnect();
+            isPlay = false;
+
+}
 
 let gamemember = [];
 function game(interaction, number) {
