@@ -108,7 +108,7 @@ client.on('interactionCreate', async (interaction) => {
 
             break;
         case 'shutdown':
-            shutdown(voice);
+            shutdown(voice,interaction);
         
             break;
         case 'pause':
@@ -158,7 +158,7 @@ client.on('interactionCreate', async (interaction) => {
     };
 });
 
-function shutdown(voice){
+function shutdown(voice,interaction){
 
     const connection = voice.getVoiceConnection("381392874404577280");
             list = [];
@@ -166,6 +166,7 @@ function shutdown(voice){
             shuffleck = false;
             connection.disconnect();
             isPlay = false;
+            interaction.channel.send('哭啊!我一定會回來的~~');
 
 }
 
