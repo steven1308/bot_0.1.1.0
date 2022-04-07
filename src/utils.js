@@ -31,6 +31,7 @@ function mintosec(min) {
     return c;
 
 }
+//a
 // function command(msg, command, config) {
 
 //     if (command === config.ping) {
