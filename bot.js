@@ -41,8 +41,8 @@ client.on("ready", async () => {
         await rest.put(
             Routes.applicationGuildCommands(client.user.id, "381392874404577280"),
            
-            // { body: commands },
-             { body: "" },
+            { body: commands },
+            // { body: "" },
         );
     } catch (error) {
         console.error(error);
@@ -81,7 +81,8 @@ client.on('interactionCreate', async (interaction) => {
 
     guild = client.guilds.cache.get(interaction.guildId);
     member = guild.members.cache.get(interaction.member.user.id);
-
+    let args;
+    let jumpck=true;
     switch (interaction.commandName) {
 
         case 'game':
@@ -108,7 +109,7 @@ client.on('interactionCreate', async (interaction) => {
 
             break;
         case 'shutdown':
-            shutdown(voice,interaction);
+            shutdown(voice);
         
             break;
         case 'pause':
@@ -122,17 +123,19 @@ client.on('interactionCreate', async (interaction) => {
 
             break;
         case 'play':
-            let args = interaction.options.getString('網址');
+             args = interaction.options.getString('網址');
             if (args === null) {
                 args = interaction.options.getString('預設');
             }
-            await churl(interaction, args, true);
+jumpck=true;
+            await churl(interaction, args,jumpck);
 
             break;
 
-        case 'playnow':
-
-            churl(client, args[0], false);
+        case 'playnext':
+             args = interaction.options.getString('網址');
+           jumpck=false;
+             await churl(interaction, args,false);
 
             break;
         case 'shuffle':
@@ -158,7 +161,7 @@ client.on('interactionCreate', async (interaction) => {
     };
 });
 
-function shutdown(voice,interaction){
+function shutdown(voice){
 
     const connection = voice.getVoiceConnection("381392874404577280");
             list = [];
@@ -166,7 +169,6 @@ function shutdown(voice,interaction){
             shuffleck = false;
             connection.disconnect();
             isPlay = false;
-            interaction.channel.send('哭啊!我一定會回來的~~');
 
 }
 
@@ -312,6 +314,9 @@ function queue(interaction, cord1) {
         if (playlist[i] !== undefined) {
             if (playlist[i].type === "play") {
                 queue.splice(1, 0, "`[" + `${(1).toString().padStart(2, "0")}` + "]`  ► " + `${playlist[i].name}` + "`" + `${playlist[i].time}` + "`" + ` 由 ` + "**" + `${playlist[i].user}` + "**" + `加入`)
+            }else if(playlist[i].type==="jump"){
+                queue[k] = "`[" + `${(i + 1).toString().padStart(2, "0")}` + "]`▲" + `${playlist[i].name}` + "`" + `${playlist[i].time}` + "`" + ` 由 ` + "**" + `${playlist[i].user} ` + "**" + `加入`
+                
             } else {
 
                 queue[k] = "`[" + `${(i + 1).toString().padStart(2, "0")}` + "]`" + `${playlist[i].name}` + "`" + `${playlist[i].time}` + "`" + ` 由 ` + "**" + `${playlist[i].user} ` + "**" + `加入`
@@ -365,7 +370,7 @@ async function playMusic(url, id) {
 }
 
 
-async function churl(interaction, args, ck) {
+async function churl(interaction,args,ck) {
     let i = 0;
     let tempList = [];
 
@@ -377,7 +382,7 @@ async function churl(interaction, args, ck) {
 
             // 
 
-            if (ck) {
+            if (ck==true) {
 
                 tempList.push({
                    
@@ -391,14 +396,14 @@ async function churl(interaction, args, ck) {
                 })
 
             } else {
-
-                tempList.unshift({
+               
+                tempList.push({
                     
                     name: ytplData.items[i].title,
                     url: ytplData.items[i].url,
                     time: ytplData.items[i].duration,
                     status: "jump",
-                    type: "wait",
+                    type: "jump",
                     user: interaction.user.username,
                     id: ytplData.id
                 })
@@ -414,12 +419,11 @@ async function churl(interaction, args, ck) {
         const res = await ytdl.getInfo(args);
         const info = res.videoDetails;
 
-        if (ck) {
+        if (ck==true) {
 
             tempList.push({
                 name: info.title,
                 url: args,
-               
                 time: utils.getTime(info.lengthSeconds),
                 status: "normal",
                 type: "wait",
@@ -429,14 +433,13 @@ async function churl(interaction, args, ck) {
 
             interaction.channel.send(`歌曲加入隊列:${info.title}`);
         } else {
-
-            tempList.unshift({
+          
+            tempList.push({
                 name: info.title,
                 url: args,
-               
                 time: utils.getTime(info.lengthSeconds),
                 status: "jump",
-                type: "wait",
+                type: "jump",
                 user: interaction.user.username,
                 id: info.id
             });
@@ -450,6 +453,18 @@ async function churl(interaction, args, ck) {
 
         return;
     }
+ for(i=0;i<tempList.length;i++){
+
+    if(tempList[i].type==="jump"){
+        console.log("test1");
+   
+        list.splice(1,0,tempList[i]);
+        playlist.splice(1,0,tempList[i]);
+    tempList.splice(i,1)
+    
+        }
+
+     }
     
     
     if (shuffleck) {
