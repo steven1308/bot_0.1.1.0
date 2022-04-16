@@ -41,6 +41,10 @@ client.on("ready", async () => {
         await rest.put(
             Routes.applicationGuildCommands(client.user.id, "381392874404577280"),
 
+
+
+
+
             { body: commands },
             // { body: "" },
         );
@@ -148,7 +152,7 @@ client.on('interactionCreate', async (interaction) => {
             break;
         case "skip":
             args = interaction.options.getString('數量或人');
-            skip(args);
+            skip(args, interaction);
             break;
         case "nowplay":
 
@@ -160,7 +164,8 @@ client.on('interactionCreate', async (interaction) => {
 );
 
 
-function skip(user) {
+
+function skip(user, interaction) {
     console.log(user);
     if (playlist.length == 0) {
         interaction.channel.send(`播放序列是空的!`);
@@ -175,11 +180,27 @@ function skip(user) {
 
 
 
-    } else if (user != null) {
-
-
-
     }
+//     else if (user != null) {
+//         user = user.replace("@","")
+// console.log(user);
+
+//         for (let i = 0; i < list.length; i++) {
+//             if (list.userid === user) {
+
+//                 list.splice(i, 1);
+
+//             }
+//             if (playlist.userid === user) {
+
+//                 playlist.splice(i, 1);
+
+//             }
+
+//         }
+
+
+//     }
 
 
 
@@ -195,6 +216,8 @@ function shutdown(voice) {
     shuffleck = false;
     connection.disconnect();
     isPlay = false;
+
+
 
 }
 
@@ -399,7 +422,7 @@ async function playMusic(url, id) {
 async function churl(interaction, args, ck) {
     let i = 0;
     let tempList = [];
-
+    console.log(interaction.user.id);
     if (ytpl.validateID(args)) {
 
         const ytplData = await ytpl(args, { limit: "Infinity" });
@@ -417,6 +440,7 @@ async function churl(interaction, args, ck) {
                     time: ytplData.items[i].duration,
                     status: "normal",
                     user: interaction.user.username,
+                    userid: interaction.user.id,
                     type: "wait",
                     id: ytplData.id
                 })
@@ -431,6 +455,7 @@ async function churl(interaction, args, ck) {
                     status: "jump",
                     type: "wait",
                     user: interaction.user.username,
+                    userid: interaction.user.id,
                     id: ytplData.id
                 })
 
@@ -454,6 +479,7 @@ async function churl(interaction, args, ck) {
                 status: "normal",
                 type: "wait",
                 user: interaction.user.username,
+                userid: interaction.user.id,
                 id: info.videoId
             });
 
@@ -467,6 +493,7 @@ async function churl(interaction, args, ck) {
                 status: "jump",
                 type: "wait",
                 user: interaction.user.username,
+                userid: interaction.user.id,
                 id: info.videoId
             });
             client.channels.cache.get(interaction.channel.id).send(`歌曲插入隊列:${info.title}`);
@@ -566,6 +593,7 @@ function shuffle(msg) {
 
     } else {
         if (list.length != 0) {
+            playlist = [];
             playlist = playlist.concat(list);;
             shuffleck = false;
 
