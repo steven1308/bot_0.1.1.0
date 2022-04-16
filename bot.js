@@ -179,11 +179,11 @@ function skip(user) {
 
 
 
-    } else if (user != null) {
+    // } else if (user != null) {
 
 
 
-    }
+    // }
 
 
 
