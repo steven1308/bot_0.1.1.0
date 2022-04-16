@@ -152,7 +152,7 @@ client.on('interactionCreate', async (interaction) => {
             break;
         case "skip":
             args = interaction.options.getString('數量或人');
-            skip(args);
+            skip(args,interaction);
             break;
         case "nowplay":
 
@@ -164,7 +164,8 @@ client.on('interactionCreate', async (interaction) => {
 );
 
 
-function skip(user) {
+
+function skip(user,interaction) {
     console.log(user);
     if (playlist.length == 0) {
         interaction.channel.send(`播放序列是空的!`);
@@ -200,6 +201,8 @@ function shutdown(voice) {
     shuffleck = false;
     connection.disconnect();
     isPlay = false;
+
+        
 
 }
 
@@ -571,6 +574,7 @@ function shuffle(msg) {
 
     } else {
         if (list.length != 0) {
+            playlist=[];
             playlist = playlist.concat(list);;
             shuffleck = false;
 
