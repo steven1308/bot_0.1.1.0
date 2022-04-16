@@ -147,14 +147,8 @@ client.on('interactionCreate', async (interaction) => {
 
             break;
         case "skip":
-
-            if (playlist.length > 0) {
-                interaction.channel.send(`已跳過${playlist[0].name} `);
-                playFinish(interaction);
-            } else {
-                interaction.channel.send(`播放序列是空的!`);
-            }
-
+            args = interaction.options.getString('數量或人');
+            skip(args);
             break;
         case "nowplay":
 
@@ -163,10 +157,35 @@ client.on('interactionCreate', async (interaction) => {
             break;
     };
 }
-
-
-
 );
+
+
+function skip(user) {
+    console.log(user);
+    if (playlist.length == 0) {
+        interaction.channel.send(`播放序列是空的!`);
+        return;
+
+    } else if (user == null) {
+        if (playlist.length > 0) {
+            interaction.channel.send(`已跳過${playlist[0].name} `);
+            playFinish(interaction);
+
+        }
+
+
+
+    } else if (user != null) {
+
+
+
+    }
+
+
+
+
+}
+
 
 function shutdown(voice) {
 
@@ -315,7 +334,7 @@ function queue(interaction, cord1) {
             cord1 = i;
         }
     }
-    console.log(playlist);
+    // console.log(playlist);
 
     for (k = 0; i < cord1 + config.listmax; i++, k++) {
         if (playlist[i] !== undefined) {
@@ -547,7 +566,7 @@ function shuffle(msg) {
 
     } else {
         if (list.length != 0) {
-            playlist = list;
+            playlist = playlist.concat(list);;
             shuffleck = false;
 
             msg.channel.send(`播放器將不再隨機播放本播放列表`);
