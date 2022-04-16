@@ -13,16 +13,16 @@ const utils = require("./src/utils.js");
 const config = require("./src/config/config.js");
 
 let shuffleck = false;
-let shufflelist = [];
-let playlist = [];
+let shufflelist = new Array();
+let playlist = new Array();
 let guild, member;
 let dispatcher;
-let list = [];
+let list = new Array();
 let isPlay = false;
 let audioPlayer;
 let pauseck = false;
 
-const commands = [];
+const commands = new Array();
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
 
 for (const file of commandFiles) {
@@ -40,7 +40,11 @@ client.on("ready", async () => {
     try {
         await rest.put(
             Routes.applicationGuildCommands(client.user.id, "381392874404577280"),
+
            
+
+
+
             { body: commands },
             // { body: "" },
         );
@@ -81,7 +85,8 @@ client.on('interactionCreate', async (interaction) => {
 
     guild = client.guilds.cache.get(interaction.guildId);
     member = guild.members.cache.get(interaction.member.user.id);
-
+    let args;
+    let jumpck = true;
     switch (interaction.commandName) {
 
         case 'game':
@@ -109,7 +114,7 @@ client.on('interactionCreate', async (interaction) => {
             break;
         case 'shutdown':
             shutdown(voice);
-        
+
             break;
         case 'pause':
             pause(interaction);
@@ -122,17 +127,22 @@ client.on('interactionCreate', async (interaction) => {
 
             break;
         case 'play':
-            let args = interaction.options.getString('網址');
+            args = interaction.options.getString('網址');
             if (args === null) {
                 args = interaction.options.getString('預設');
             }
-            await churl(interaction, args, true);
+            jumpck = true;
+            await churl(interaction, args, jumpck);
 
             break;
 
-        case 'playnow':
-
-            churl(client, args[0], false);
+        case 'playnext':
+            args = interaction.options.getString('網址');
+            if (args === null) {
+                args = interaction.options.getString('預設');
+            }
+            jumpck = false;
+            await churl(interaction, args, false);
 
             break;
         case 'shuffle':
@@ -141,14 +151,8 @@ client.on('interactionCreate', async (interaction) => {
 
             break;
         case "skip":
-
-            if (list.length > 0) {
-                interaction.channel.send(`已跳過${playlist[0].name} `);
-                playFinish();
-            } else {
-                interaction.channel.send(`播放序列是空的!`);
-            }
-
+            args = interaction.options.getString('數量或人');
+            skip(args);
             break;
         case "nowplay":
 
@@ -156,16 +160,45 @@ client.on('interactionCreate', async (interaction) => {
 
             break;
     };
-});
+}
+);
 
-function shutdown(voice){
+
+function skip(user) {
+    console.log(user);
+    if (playlist.length == 0) {
+        interaction.channel.send(`播放序列是空的!`);
+        return;
+
+    } else if (user == null) {
+        if (playlist.length > 0) {
+            interaction.channel.send(`已跳過${playlist[0].name} `);
+            playFinish(interaction);
+
+        }
+
+
+
+    } else if (user != null) {
+
+
+
+    }
+
+
+
+
+}
+
+
+function shutdown(voice) {
 
     const connection = voice.getVoiceConnection("381392874404577280");
-            list = [];
-            shufflelist = [];
-            shuffleck = false;
-            connection.disconnect();
-            isPlay = false;
+    list = [];
+    shufflelist = [];
+    shuffleck = false;
+    connection.disconnect();
+    isPlay = false;
 
 }
 
@@ -185,12 +218,12 @@ function game(interaction, number) {
 
                 gamemember.splice(i, 1);
 
-            } else if (gamemember[i].frequency<2) {
+            } else if (gamemember[i].frequency < 2) {
 
                 const embed = new MessageEmbed()
-                .setTitle('數字猜猜樂')
-                .setColor(0xFF60AF)
-                .setDescription(`噗噗~ <@${gamemember[i].playerId}>你選的 ${"**"}${number}${"**"} 是錯的\n好菜喔~答案是 ${"**"}${gamemember[i].rdnumber}${"**"}\n這樣都猜不到！`);
+                    .setTitle('數字猜猜樂')
+                    .setColor(0xFF60AF)
+                    .setDescription(`噗噗~ <@${gamemember[i].playerId}>你選的 ${"**"}${number}${"**"} 是錯的\n好菜喔~答案是 ${"**"}${gamemember[i].rdnumber}${"**"}\n這樣都猜不到！`);
                 client.channels.cache.get(interaction.channel.id).send({ embeds: [embed] });
                 gamemember.splice(i, 1);
             } else if (number > gamemember[i].rdnumber) {
@@ -199,7 +232,7 @@ function game(interaction, number) {
                 const embed = new MessageEmbed()
                     .setTitle('數字猜猜樂')
                     .setColor(0xFF60AF)
-                    .setDescription(`<@${gamemember[i].playerId}> 可惜，正確答案比 ${"**"}${number}${"**"} ${"`"}小${"`"}\n你還剩 ${"**"}${ gamemember[i].frequency}${"**"} 次機會。`);
+                    .setDescription(`<@${gamemember[i].playerId}> 可惜，正確答案比 ${"**"}${number}${"**"} ${"`"}小${"`"}\n你還剩 ${"**"}${gamemember[i].frequency}${"**"} 次機會。`);
                 client.channels.cache.get(interaction.channel.id).send({ embeds: [embed] });
 
 
@@ -220,7 +253,7 @@ function game(interaction, number) {
         }
 
     }
-    rd = Math.floor(Math.random() * 99)+1;
+    rd = Math.floor(Math.random() * 99) + 1;
     // console.log(rd);
     gamemember.push({
 
@@ -305,12 +338,15 @@ function queue(interaction, cord1) {
             cord1 = i;
         }
     }
-
+    // console.log(playlist);
 
     for (k = 0; i < cord1 + config.listmax; i++, k++) {
         if (playlist[i] !== undefined) {
             if (playlist[i].type === "play") {
                 queue.splice(1, 0, "`[" + `${(1).toString().padStart(2, "0")}` + "]`  ► " + `${playlist[i].name}` + "`" + `${playlist[i].time}` + "`" + ` 由 ` + "**" + `${playlist[i].user}` + "**" + `加入`)
+            } else if (playlist[i].status === "jump") {
+                queue[k] = "`[" + `${(i + 1).toString().padStart(2, "0")}` + "]`▲" + `${playlist[i].name}` + "`" + `${playlist[i].time}` + "`" + ` 由 ` + "**" + `${playlist[i].user} ` + "**" + `加入`
+
             } else {
 
                 queue[k] = "`[" + `${(i + 1).toString().padStart(2, "0")}` + "]`" + `${playlist[i].name}` + "`" + `${playlist[i].time}` + "`" + ` 由 ` + "**" + `${playlist[i].user} ` + "**" + `加入`
@@ -374,12 +410,12 @@ async function churl(interaction, args, ck) {
 
         for (i = 0; i < ytplData.items.length; i++) {
 
-            // 
 
-            if (ck) {
+
+            if (ck == true) {
 
                 tempList.push({
-                   
+
                     name: ytplData.items[i].title,
                     url: ytplData.items[i].url,
                     time: ytplData.items[i].duration,
@@ -391,8 +427,8 @@ async function churl(interaction, args, ck) {
 
             } else {
 
-                tempList.unshift({
-                    
+                tempList.push({
+
                     name: ytplData.items[i].title,
                     url: ytplData.items[i].url,
                     time: ytplData.items[i].duration,
@@ -413,33 +449,31 @@ async function churl(interaction, args, ck) {
         const res = await ytdl.getInfo(args);
         const info = res.videoDetails;
 
-        if (ck) {
+        if (ck == true) {
 
             tempList.push({
                 name: info.title,
                 url: args,
-               
                 time: utils.getTime(info.lengthSeconds),
                 status: "normal",
                 type: "wait",
                 user: interaction.user.username,
-                id: info.id
+                id: info.videoId
             });
 
             interaction.channel.send(`歌曲加入隊列:${info.title}`);
         } else {
 
-            tempList.unshift({
+            tempList.push({
                 name: info.title,
                 url: args,
-               
                 time: utils.getTime(info.lengthSeconds),
                 status: "jump",
                 type: "wait",
                 user: interaction.user.username,
-                id: info.id
+                id: info.videoId
             });
-            client.channels.cache.get(interaction.channel.id).send(`歌曲差入隊列:${info.title}`);
+            client.channels.cache.get(interaction.channel.id).send(`歌曲插入隊列:${info.title}`);
 
         }
     } else if (pauseck) {
@@ -449,19 +483,35 @@ async function churl(interaction, args, ck) {
 
         return;
     }
-    
-    
+    if (!ck) {
+        tempList = tempList.reverse();
+    }
+    for (let k = 0; k < tempList.length; k++) {
+
+        if (tempList[k].status === "jump") {
+
+
+            list.splice(1, 0, tempList[k]);
+            playlist.splice(1, 0, tempList[k]);
+
+
+        }
+
+    }
+
+
     if (shuffleck) {
 
         shuffljoin(tempList);
-    }else{
+    } else if (ck) {
         list = list.concat(tempList);
-        playlist = list;
+        playlist = playlist.concat(list);
+
 
     }
-    
-  
-    
+
+
+
     tempList = [];
     voice.joinVoiceChannel({
         channelId: member.voice.channelId,
@@ -485,15 +535,15 @@ function shuffljoin(tempList) {
     let rd = 0;
 
 
-    for (let i = 0; i < tempList.length; i++) {
+    for (let k = 0; k < tempList.length; k++) {
         rd = Math.floor(Math.random() * shufflelist.length);
 
 
-        shufflelist.splice(rd, 0, tempList[i]);
+        shufflelist.splice(rd, 0, tempList[k]);
 
     }
 
-    playlist = shufflelist;
+    playlist = playlist.concat(shufflelist);
 
 }
 function shuffle(msg) {
@@ -501,8 +551,8 @@ function shuffle(msg) {
         if (list.length != 0) {
             let temp = [];
             let temp2 = [];
-            playlist=[];
-            shufflelist=[];
+            playlist = [];
+            shufflelist = [];
             temp = temp.concat(list);
             temp2 = temp.shift();
             temp.sort(() => Math.random() - 0.5);
@@ -510,7 +560,7 @@ function shuffle(msg) {
             shufflelist.unshift(temp2);
             temp = [];
             temp2 = [];
-            playlist = shufflelist;
+            playlist = playlist.concat(shufflelist);
             shuffleck = true;
             msg.channel.send(`播放器將隨機播放本播放列表`);
         } else {
@@ -520,9 +570,9 @@ function shuffle(msg) {
 
     } else {
         if (list.length != 0) {
-            playlist = list;
+            playlist = playlist.concat(list);;
             shuffleck = false;
-            
+
             msg.channel.send(`播放器將不再隨機播放本播放列表`);
         } else {
             shuffleck = false;
@@ -532,10 +582,10 @@ function shuffle(msg) {
 
 
     }
-    
+
 }
 
-function playFinish() {
+function playFinish(msg) {
 
     if (shuffleck) {
 
@@ -560,5 +610,6 @@ function playFinish() {
         msg.channel.send('目前沒有音樂了，請加入音樂 :D');
     }
 }
+
 
 client.login(config.Token1 + config.Token2);
