@@ -166,7 +166,7 @@ client.on('interactionCreate', async (interaction) => {
 
 
 function skip(user, interaction) {
-    console.log(user);
+
     if (playlist.length == 0) {
         interaction.channel.send(`播放序列是空的!`);
         return;
@@ -181,30 +181,21 @@ function skip(user, interaction) {
 
 
     }
-//     else if (user != null) {
-//         user = user.replace("@","")
-// console.log(user);
-
-//         for (let i = 0; i < list.length; i++) {
-//             if (list.userid === user) {
-
-//                 list.splice(i, 1);
-
-//             }
-//             if (playlist.userid === user) {
-
-//                 playlist.splice(i, 1);
-
-//             }
-
-//         }
-
-
-//     }
+    else if (user != null) {
 
 
 
+        user = user.replace("@", "").replace("!", "").replace("<", "").replace(">", "");
+        console.log(user);
+        playlist = playlist.filter((a, index) => index === 0 || a.userid !== user);
+        list = list.filter((a) => a.userid !== user);
+        if (playlist[0].userid == user) {
+            playFinish(interaction);
 
+        }
+       
+
+    }
 }
 
 
@@ -213,6 +204,7 @@ function shutdown(voice) {
     const connection = voice.getVoiceConnection("381392874404577280");
     list = [];
     shufflelist = [];
+    playlist = [];
     shuffleck = false;
     connection.disconnect();
     isPlay = false;
@@ -429,8 +421,6 @@ async function churl(interaction, args, ck) {
 
         for (i = 0; i < ytplData.items.length; i++) {
 
-
-
             if (ck == true) {
 
                 tempList.push({
@@ -442,7 +432,7 @@ async function churl(interaction, args, ck) {
                     user: interaction.user.username,
                     userid: interaction.user.id,
                     type: "wait",
-                    id: ytplData.id
+                    id: ytplData.items[i].id
                 })
 
             } else {
@@ -456,7 +446,7 @@ async function churl(interaction, args, ck) {
                     type: "wait",
                     user: interaction.user.username,
                     userid: interaction.user.id,
-                    id: ytplData.id
+                    id: ytplData.items[i].id
                 })
 
             }
@@ -566,6 +556,7 @@ function shuffljoin(tempList) {
 
     }
 
+    playlist = [];
     playlist = playlist.concat(shufflelist);
 
 }
@@ -609,28 +600,28 @@ function shuffle(msg) {
 
 }
 
-function playFinish(msg) {
-
-    if (shuffleck) {
-
-        for (let i = 0; i < list.length; i++) {
-            if (playlist[0].id === list[i].id) {
-                list.splice(i, 1);
-                break;
-            }
-        }
+function playFinish(msg, user) {
 
 
 
+    // for (let i = 0; i < list.length; i++) {
+    //     if (playlist[0].id === list[i].id) {
+    //         list.splice(i, 1);
+    //         break;
+    //     }
+    // }
 
-    }
+    list = list.filter((a) => a.id !== playlist[0].id);
+
     playlist.shift();
+
     if (playlist.length > 0) {
 
         playMusic(playlist[0].url);
 
     } else {
-        isPlay = false;
+        
+        
         msg.channel.send('目前沒有音樂了，請加入音樂 :D');
     }
 }
