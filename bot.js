@@ -15,7 +15,6 @@ const config = require("./src/config/config.js");
 let isShuffle = false;
 let shuffleList = [];
 let playlist = [];
-let guild, member;
 let dispatcher;
 let list = [];
 let isPlay = false;
