@@ -113,7 +113,7 @@ async function registerCommands() {
             commands.push(command.toJSON());
         }
         const rest = new REST({ version: '9' }).setToken(config.Token1 + config.Token2);
-        await rest.put(Routes.applicationGuildCommands(client.user.id, "381392874404577280"), { body: commands });
+        await rest.put(Routes.applicationGuildCommands(client.user.id, "381392874404577280"), { body: "" });
     } catch (error) {
         console.error(error);
     }
