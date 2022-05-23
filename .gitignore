@@ -109,3 +109,7 @@ build/
 # vscode settings
 .vscode/
 
+# mp3 and mp4 file
+*.mp3
+*.mp4
+

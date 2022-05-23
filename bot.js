@@ -6,6 +6,8 @@ const { Routes } = require('discord-api-types/v9');
 const fs = require("fs");
 const ytdl = require('ytdl-core');
 const ytpl = require("ytpl");
+const pathToFfmpeg = require("ffmpeg-static");
+const childProcess = require("child_process");
 const voice = require('@discordjs/voice');
 const ping = require("./src/ping.js");
 const Record = require("./src/Record.js");
@@ -241,30 +243,43 @@ async function playMusic(url, id) {
     const connection = voice.getVoiceConnection("381392874404577280");
     audioPlayer = voice.createAudioPlayer();
 
-    const stream = await ytdl(url, {
-        filter: 'audioonly',
+    const musicStream = fs.createWriteStream("video.mp4");
+
+    await ytdl(url, {
+        filter: "audioonly",
         highWaterMark: 1 << 25
+    }).pipe(musicStream);
+
+    musicStream.on("finish", () => {
+
+        childProcess.exec(`${pathToFfmpeg} -i video.mp4 -af loudnorm=I=-16:LRA=11:TP=-1.5 output.mp3`, ((error, stdout, stderr) => {
+
+            if (error) {
+                console.error(`error: ${error}`);
+                return;
+            }
+
+            // console.log(`stdout: ${stdout}`);
+            // console.error(`stderr: ${stderr}`);
+
+            const resource = voice.createAudioResource(fs.createReadStream("output.mp3"));
+
+            connection.subscribe(audioPlayer);
+            audioPlayer.play(resource);
+
+            playlist[0].type = "play";
+
+            audioPlayer.on("stateChange", (oldState, newState) => {
+                if (newState.status == "idle") {
+                    playFinish();
+                }
+            });
+
+            audioPlayer.on("error", (error) => {
+                console.error(error);
+            });
+        }));
     });
-
-    const resource = voice.createAudioResource(stream);
-
-    connection.subscribe(audioPlayer);
-    audioPlayer.play(resource);
-
-    playlist[0].type = "play";
-
-    audioPlayer.on("stateChange", (oldState, newState) => {
-        if (newState.status == "idle") {
-
-            playFinish();
-        }
-    });
-
-    audioPlayer.on("error", (error) => {
-        console.error(error);
-    });
-
-    return dispatcher;
 }
 
 
