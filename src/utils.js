@@ -15,21 +15,17 @@ function getTime(seconds) {
 }
 
 function mintosec(min) {
-    let c
-
+    
+    let c;
     let timeArray = min.split(":");
 
     if (timeArray.length === 3) {
         c = Number(timeArray[0]) * 3600 + Number(timeArray[1]) * 60 + Number(timeArray[2]);
-
-
     } else {
         c = Number(timeArray[0]) * 60 + Number(timeArray[1]);
-
     }
 
     return c;
-
 }
 // function command(msg, command, config) {
 

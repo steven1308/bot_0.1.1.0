@@ -30,7 +30,7 @@ module.exports = Record = async (client, config, oldState, newState) => {
     const embed = new Discord.MessageEmbed()
         .setTitle('語音頻道紀錄')
         .setColor(0xFF60AF)
-        .setDescription(`時間:${utils.time()}\n名稱:${n[0]}\n拒聽:${n[1]} \n靜音:${n[2]}\n直播:${n[3]}\n頻道: ${n[4]}`);
+        .setDescription(`時間:${utils.time()}\n暱稱:<@${newState.id}>\n名稱:${n[0]}\n拒聽:${n[1]} \n靜音:${n[2]}\n直播:${n[3]}\n頻道: ${n[4]}`);
 
     channel.send({embeds: [embed]});
 }

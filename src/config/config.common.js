@@ -1,3 +1,3 @@
 module.exports = {
-    listmax: 10
+    listMax: 10
 }
