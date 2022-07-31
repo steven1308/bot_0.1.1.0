@@ -1,5 +1,6 @@
 const Discord = require("discord.js");
-const utils = require("./utils.js")
+const utils = require("./utils.js");
+const mainBot = require("../bot.js");
 
 
 module.exports = Record = async (client, config, oldState, newState) => {
@@ -9,6 +10,8 @@ module.exports = Record = async (client, config, oldState, newState) => {
     let o = [oldState.member.user.username, oldState.selfDeaf, oldState.selfMute, oldState.streaming, oldState.channel];
     let ch = true;
 
+    // console.log(newState.member.user.bot)
+
     for (let i = 1; i < n.length - 1; i++) {
         if (n[i] !== o[i]) {
             ch = false;
@@ -16,6 +19,10 @@ module.exports = Record = async (client, config, oldState, newState) => {
         } else {
             n[i] = n[i] ? "是" : "否";
         }
+    }
+    if(newState.member.user.bot===true&&n[4]===null){
+        console.log("test");
+        mainBot.shutdown();
     }
     if (n[4] === null) {
         n[4] = "從 " + o[4].name + " 離開了 <-"
@@ -26,11 +33,12 @@ module.exports = Record = async (client, config, oldState, newState) => {
     } else if (n[4] !== o[4]) {
         n[4] = o[4].name + " 到 " + n[4].name + " <-";
     }
-
+   
     const embed = new Discord.MessageEmbed()
         .setTitle('語音頻道紀錄')
         .setColor(0xFF60AF)
         .setDescription(`時間:${utils.time()}\n暱稱:<@${newState.id}>\n名稱:${n[0]}\n拒聽:${n[1]} \n靜音:${n[2]}\n直播:${n[3]}\n頻道: ${n[4]}`);
 
     channel.send({embeds: [embed]});
+   
 }

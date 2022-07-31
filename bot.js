@@ -143,7 +143,7 @@ function skip(interaction) {
     }
 }
 
-function shutdown(voice) {
+ function shutdown() {
     const connection = voice.getVoiceConnection("381392874404577280");
     list = [];
     shuffleList = [];
@@ -506,3 +506,5 @@ function game(interaction, number) {
 }
 
 client.login(config.Token1 + config.Token2);
+
+module.exports = { shutdown };
