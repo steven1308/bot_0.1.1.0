@@ -364,16 +364,22 @@ async function churl(interaction, isJump) {
         }
     }
 
-    if (isShuffle) {
-        shuffleJoin(tempList);
-    } else if (isJump) {
+    if (isJump) {
         list = list.concat(tempList);
         playlist = playlist.concat(tempList);
+    } else if (isShuffle) {
+        shuffleJoin(tempList);
     }
+
 
     tempList = [];
     botJoinVoiceChannel(interaction);
-
+    if (isJump) {
+        list = list.concat(tempList);
+        playlist = playlist.concat(tempList);
+    } else if (isShuffle) {
+        shuffleJoin(tempList);
+    }
     if (!isPlay) {
         playMusic(playlist[0].url, playlist[0].id);
         isPlay = true;
